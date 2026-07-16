@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session as DbSession, selectinload
 
 from ..config import settings
 from ..database import get_db
+from ..llm import AnthropicLLM, OpenAILLM
 from ..models import AuditEvent, FaqDoc, Message, Session
 from ..seed import reembed_doc
 
@@ -176,3 +177,55 @@ def api_messages(
         }
         for m in rows
     ]
+
+
+# ── LLM Comparison ────────────────────────────────────────────────────────────
+
+@router.get("/compare", response_class=HTMLResponse)
+def compare_page(
+    request: Request,
+    token: str = Query(default=""),
+    _: str = Depends(require_admin),
+) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request,
+        "admin_compare.html",
+        {
+            "token": token,
+            "anthropic_ready": bool(settings.anthropic_api_key),
+            "openai_ready": bool(settings.openai_api_key),
+            "anthropic_model": settings.anthropic_model,
+            "openai_model": settings.llm_model,
+        },
+    )
+
+
+@router.post("/api/compare")
+def api_compare(
+    request: Request,
+    question: str = Form(...),
+    context: str = Form(default=""),
+    _: str = Depends(require_admin),
+) -> dict:
+    """Run the same question through both Claude and GPT-4o and return both answers."""
+    import time
+
+    chunks = [context.strip()] if context.strip() else None
+    results = {}
+
+    for provider, llm in [
+        ("anthropic", AnthropicLLM(settings.anthropic_model) if settings.anthropic_api_key else None),
+        ("openai", OpenAILLM(settings.llm_model) if settings.openai_api_key else None),
+    ]:
+        if llm is None:
+            results[provider] = {"reply": f"⚠️ {provider} API key not configured.", "latency_ms": 0, "model": "—"}
+            continue
+        t0 = time.perf_counter()
+        try:
+            reply = llm.generate(question, context_chunks=chunks)
+            latency = int((time.perf_counter() - t0) * 1000)
+            results[provider] = {"reply": reply, "latency_ms": latency, "model": llm.name}
+        except Exception as exc:
+            results[provider] = {"reply": f"❌ Error: {exc}", "latency_ms": 0, "model": llm.name}
+
+    return results
