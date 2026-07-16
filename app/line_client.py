@@ -10,6 +10,7 @@ import httpx
 from .config import settings
 
 LINE_REPLY_URL = "https://api.line.me/v2/bot/message/reply"
+LINE_PUSH_URL  = "https://api.line.me/v2/bot/message/push"
 LINE_CONTENT_URL = "https://api-data.line.me/v2/bot/message/{message_id}/content"
 
 IMAGE_INTRO_TH = (
@@ -41,7 +42,27 @@ HOW_IT_WORKS_TH = (
 )
 
 
-def get_image_b64(message_id: str) -> str | None:
+def push(user_id: str, *texts: str) -> None:
+    """Send one or more messages to a user via the LINE Push API.
+
+    Unlike reply(), push() can be called at any time (not limited to a single
+    reply-token window). Used for image analysis results where the reply token
+    was already consumed by the acknowledgement message.
+    """
+    if not settings.line_channel_access_token or not user_id:
+        return
+    messages = [{"type": "text", "text": t[:4900]} for t in texts if t]
+    if not messages:
+        return
+    httpx.post(
+        LINE_PUSH_URL,
+        headers={
+            "Authorization": f"Bearer {settings.line_channel_access_token}",
+            "Content-Type": "application/json",
+        },
+        json={"to": user_id, "messages": messages},
+        timeout=15,
+    )
     """Download image content from LINE and return as base64 string."""
     if not settings.line_channel_access_token:
         return None

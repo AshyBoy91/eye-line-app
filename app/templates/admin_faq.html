@@ -27,15 +27,28 @@
   </nav>
 
   <table>
-    <tr><th>Title</th><th>Category</th><th>Source</th><th>Status</th><th>Chunks</th><th>Updated</th></tr>
+    <tr><th>Title</th><th>Category</th><th>Source</th><th>Status</th><th>Valid</th><th>Chunks</th><th>Updated</th><th>Actions</th></tr>
     {% for d in docs %}
       <tr>
         <td>{{ d.title }}</td>
         <td>{{ d.category }}</td>
         <td>{{ d.source or '-' }}</td>
         <td><span class="status">{{ d.status }}</span> v{{ d.version }}</td>
+        <td style="font-size:11px;color:#6b7b86;">
+          {% if d.valid_from %}from {{ d.valid_from.strftime('%Y-%m-%d') }}{% endif %}
+          {% if d.valid_to %}&nbsp;–&nbsp;{{ d.valid_to.strftime('%Y-%m-%d') }}{% endif %}
+          {% if not d.valid_from and not d.valid_to %}always{% endif %}
+        </td>
         <td>{{ d.chunks|length }}</td>
         <td>{{ d.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>
+          <a href="/admin/faq/{{ d.id }}/edit?token={{ token }}" style="color:#2a9d8f;font-size:12px;">Edit</a>
+          &nbsp;
+          <form method="post" action="/admin/faq/{{ d.id }}/delete?token={{ token }}" style="display:inline"
+                onsubmit="return confirm('Delete: {{ d.title }}?')">
+            <button type="submit" style="background:none;border:none;color:#e76f51;cursor:pointer;font-size:12px;padding:0;">Delete</button>
+          </form>
+        </td>
       </tr>
     {% endfor %}
   </table>
@@ -45,11 +58,15 @@
     <label>Title</label>
     <input name="title" required />
     <label>Category</label>
-    <input name="category" placeholder="rice / soil / pests / crop" required />
+    <input name="category" placeholder="rice / soil / pests / crop / government_incentive / false_news_alert" required />
     <label>Source (authoritative)</label>
     <input name="source" placeholder="กรมการข้าว" />
     <label>Body (Thai)</label>
     <textarea name="body_th" rows="5" required></textarea>
+    <label>Valid from (optional, YYYY-MM-DD)</label>
+    <input name="valid_from" type="date" />
+    <label>Valid to / Expiry (optional, YYYY-MM-DD)</label>
+    <input name="valid_to" type="date" />
     <button type="submit">Publish &amp; index</button>
   </form>
 </body>

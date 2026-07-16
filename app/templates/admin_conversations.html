@@ -27,6 +27,20 @@
     <a href="/admin/compare?token={{ token }}">⚖️ Compare LLMs</a>
     <a href="/admin/logout">Logout</a>
   </nav>
+  <form method="get" action="/admin/conversations" style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <input type="hidden" name="token" value="{{ token }}"/>
+    <input name="q" value="{{ q }}" placeholder="Search message content..." style="padding:6px 10px;border:1px solid #cdd8dc;border-radius:6px;font-size:14px;width:260px;"/>
+    <select name="route" style="padding:6px 10px;border:1px solid #cdd8dc;border-radius:6px;font-size:14px;">
+      <option value="">All routes</option>
+      <option value="faq_grounded" {{ 'selected' if route=='faq_grounded' }}>faq_grounded</option>
+      <option value="smalltalk" {{ 'selected' if route=='smalltalk' }}>smalltalk</option>
+      <option value="refused" {{ 'selected' if route=='refused' }}>refused</option>
+      <option value="image_analysis" {{ 'selected' if route=='image_analysis' }}>image_analysis</option>
+    </select>
+    <button type="submit" style="padding:6px 16px;background:#2a9d8f;color:#fff;border:0;border-radius:6px;cursor:pointer;">Search</button>
+    {% if q or route %}<a href="/admin/conversations?token={{ token }}" style="font-size:13px;color:#e76f51;">✕ Clear</a>{% endif %}
+  </form>
+  <div style="color:#6b7b86;font-size:12px;margin-bottom:8px;">{{ sessions|length }} session(s) shown</div>
   {% if not sessions %}
     <p class="empty">No conversations yet. Send one via <code>POST /webhook/simulate</code>.</p>
   {% endif %}

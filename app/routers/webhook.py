@@ -80,21 +80,22 @@ async def line_webhook(
         if msg_type == "text":
             text = message.get("text", "")
         elif msg_type == "image":
-            # Send an immediate acknowledgement so the farmer knows we're working on it
+            # Send immediate acknowledgement (consumes the reply token)
             line_client.reply(reply_token, line_client.IMAGE_INTRO_TH)
             image_b64 = line_client.get_image_b64(line_message_id)
-            reply_token = ""  # reply token already used; image result sent via push if needed
+            reply_token = ""  # already consumed
 
         result, briefing = _process(db, line_user_id, text, line_message_id, image_b64)
-        if result is not None and reply_token:
-            if briefing:
-                line_client.reply(reply_token, briefing, result.reply)
-            else:
-                line_client.reply(reply_token, result.reply)
-            handled += 1
-        elif result is not None and image_b64:
-            # Image: acknowledgement already sent; result logged. In production
-            # use LINE Push API to send the analysis result asynchronously.
+        if result is not None:
+            if reply_token:
+                # Text message — use reply token (briefing as first bubble)
+                if briefing:
+                    line_client.reply(reply_token, briefing, result.reply)
+                else:
+                    line_client.reply(reply_token, result.reply)
+            elif image_b64:
+                # Image — reply token consumed by ack; push the analysis result
+                line_client.push(line_user_id, result.reply)
             handled += 1
 
     return {"status": "ok", "handled": handled}

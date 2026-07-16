@@ -1,21 +1,11 @@
-"""Seed the knowledge base with Thai agriculture FAQ content.
+"""Replace SAMPLE_FAQS in seed.py with comprehensive Thai agricultural data."""
+import re
+from pathlib import Path
 
-Content covers: rice cultivation, Northern Thailand crops (longan/lychee/coffee/garlic),
-soil management, pest & disease control, post-harvest, government programs, and false-news
-alerts — sourced from DOA, Rice Department, Land Development Department, and BAAC.
-In production, entries must be reviewed by domain experts before publication.
-"""
-from __future__ import annotations
+seed = Path(__file__).resolve().parent.parent / "app" / "seed.py"
+src = seed.read_text(encoding="utf-8")
 
-import hashlib
-
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session
-
-from .embeddings import get_embedder
-from .models import FaqChunk, FaqDoc
-
-SAMPLE_FAQS = [
+NEW_FAQS = """SAMPLE_FAQS = [
     # ── Rice ─────────────────────────────────────────────────────────────────
     {
         "title": "ข้าวใบเหลือง — สาเหตุและการแก้ไข",
@@ -309,82 +299,20 @@ SAMPLE_FAQS = [
             "(3) ผลผลิตลดลง 20–40% มีการวิจัยยืนยันแล้ว งดเว้นการปฏิบัตินี้โดยเด็ดขาด"
         ),
     },
-]
+]"""
 
+match = re.search(r"SAMPLE_FAQS = \[.*?\n\]", src, re.DOTALL)
+if not match:
+    print("ERROR: SAMPLE_FAQS not found")
+    exit(1)
 
-def _chunk_text(text: str, size: int = 220) -> list[str]:
-    """Simple length-based chunking (Thai has no spaces to split on reliably)."""
-    text = text.strip()
-    if len(text) <= size:
-        return [text]
-    return [text[i : i + size] for i in range(0, len(text), size)]
+new_src = src[: match.start()] + NEW_FAQS + src[match.end():]
+seed.write_text(new_src, encoding="utf-8")
 
-
-def seed_if_empty(db: Session) -> int:
-    existing = db.scalar(select(func.count()).select_from(FaqDoc))
-    if existing:
-        return 0
-
-    embedder = get_embedder()
-    created = 0
-    for item in SAMPLE_FAQS:
-        doc = FaqDoc(
-            title=item["title"],
-            category=item["category"],
-            body_th=item["body_th"],
-            source=item["source"],
-            status="published",
-            version=1,
-        )
-        db.add(doc)
-        db.flush()
-        _embed_doc(db, doc, embedder)
-        created += 1
-
-    db.commit()
-    return created
-
-
-def _embed_doc(db: Session, doc: FaqDoc, embedder) -> None:
-    chunks = _chunk_text(doc.body_th)
-    vectors = embedder.embed(chunks)
-    for idx, (text, vec) in enumerate(zip(chunks, vectors)):
-        db.add(
-            FaqChunk(
-                faq_doc_id=doc.id,
-                chunk_index=idx,
-                text=text,
-                embedding=vec,
-                token_count=len(text),
-                hash=hashlib.sha256(text.encode("utf-8")).hexdigest()[:16],
-            )
-        )
-
-
-def reembed_doc(db: Session, doc: FaqDoc) -> None:
-    """Re-chunk and re-embed a FAQ document (call after create/update)."""
-    for chunk in list(doc.chunks):
-        db.delete(chunk)
-    db.flush()
-    _embed_doc(db, doc, get_embedder())
-
-
-def reembed_all_if_dim_changed(db: Session) -> int:
-    """Re-embed all FAQ docs if embedder dimension changed (e.g. hashing→openai).
-    Called on startup so switching EMBEDDINGS_PROVIDER auto-reindexes the KB.
-    Returns number of docs re-embedded (0 = no change needed).
-    """
-    from sqlalchemy import select
-    from .models import FaqChunk
-
-    embedder = get_embedder()
-    sample = db.scalar(select(FaqChunk).limit(1))
-    if sample is None:
-        return 0
-    if len(sample.embedding or []) == embedder.dim:
-        return 0
-    docs = db.scalars(select(FaqDoc).where(FaqDoc.status != "archived")).all()
-    for doc in docs:
-        reembed_doc(db, doc)
-    db.commit()
-    return len(docs)
+import ast
+try:
+    ast.parse(new_src)
+    count = new_src.count('"title":')
+    print(f"OK: {count} FAQ entries, file parses cleanly")
+except SyntaxError as e:
+    print(f"SYNTAX ERROR: {e}")

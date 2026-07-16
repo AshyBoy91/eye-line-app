@@ -7,10 +7,11 @@ content writes an `audit_event`.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Header, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSession, selectinload
@@ -98,20 +99,30 @@ def admin_home(token: str = Query(default="")) -> RedirectResponse:
 def conversations(
     request: Request,
     token: str = Query(default=""),
+    q: str = Query(default=""),
+    route: str = Query(default=""),
     _: str = Depends(require_admin),
     db: DbSession = Depends(get_db),
 ) -> HTMLResponse:
-    sessions = db.scalars(
+    stmt = (
         select(Session)
         .options(selectinload(Session.messages).selectinload(Message.citations))
         .order_by(Session.last_activity_at.desc())
-        .limit(50)
-    ).all()
+    )
+    if q:
+        stmt = stmt.join(Message, Message.session_id == Session.id).where(
+            Message.content.ilike(f"%{q}%")
+        ).distinct()
+    if route:
+        stmt = stmt.join(Message, Message.session_id == Session.id, isouter=True).where(
+            Message.route == route
+        ).distinct()
+    sessions = db.scalars(stmt.limit(100)).all()
     _audit(db, action="view_conversations")
     return templates.TemplateResponse(
         request,
         "admin_conversations.html",
-        {"sessions": sessions, "token": token},
+        {"sessions": sessions, "token": token, "q": q, "route": route},
     )
 
 
@@ -135,21 +146,77 @@ def faq_create(
     category: str = Form(...),
     source: str = Form(default=""),
     body_th: str = Form(...),
+    valid_from: str = Form(default=""),
+    valid_to: str = Form(default=""),
     _: str = Depends(require_admin),
     db: DbSession = Depends(get_db),
 ) -> RedirectResponse:
+    def _parse_dt(s: str):
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc) if s.strip() else None
     doc = FaqDoc(
-        title=title.strip(),
-        category=category.strip(),
-        source=source.strip() or None,
-        body_th=body_th.strip(),
-        status="published",
-        version=1,
+        title=title.strip(), category=category.strip(),
+        source=source.strip() or None, body_th=body_th.strip(),
+        status="published", version=1,
+        valid_from=_parse_dt(valid_from), valid_to=_parse_dt(valid_to),
     )
-    db.add(doc)
-    db.flush()
-    reembed_doc(db, doc)  # chunk + embed for retrieval
+    db.add(doc); db.flush()
+    reembed_doc(db, doc)
     _audit(db, action="create_faq", target_type="faq_doc", target_id=doc.id)
+    return RedirectResponse(url=f"/admin/faq?token={token}", status_code=303)
+
+
+@router.get("/faq/{doc_id}/edit", response_class=HTMLResponse)
+def faq_edit_form(
+    request: Request, doc_id: str,
+    token: str = Query(default=""),
+    _: str = Depends(require_admin),
+    db: DbSession = Depends(get_db),
+) -> HTMLResponse:
+    doc = db.get(FaqDoc, doc_id)
+    if not doc:
+        return HTMLResponse("Not found", status_code=404)
+    return templates.TemplateResponse(request, "admin_faq_edit.html", {"doc": doc, "token": token})
+
+
+@router.post("/faq/{doc_id}/edit", response_class=RedirectResponse)
+def faq_edit_save(
+    doc_id: str,
+    token: str = Query(default=""),
+    title: str = Form(...),
+    category: str = Form(...),
+    source: str = Form(default=""),
+    body_th: str = Form(...),
+    valid_from: str = Form(default=""),
+    valid_to: str = Form(default=""),
+    status: str = Form(default="published"),
+    _: str = Depends(require_admin),
+    db: DbSession = Depends(get_db),
+) -> RedirectResponse:
+    def _parse_dt(s: str):
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc) if s.strip() else None
+    doc = db.get(FaqDoc, doc_id)
+    if not doc:
+        return RedirectResponse(url=f"/admin/faq?token={token}", status_code=303)
+    doc.title = title.strip(); doc.category = category.strip()
+    doc.source = source.strip() or None; doc.body_th = body_th.strip()
+    doc.status = status; doc.version += 1
+    doc.valid_from = _parse_dt(valid_from); doc.valid_to = _parse_dt(valid_to)
+    reembed_doc(db, doc)
+    _audit(db, action="edit_faq", target_type="faq_doc", target_id=doc.id)
+    return RedirectResponse(url=f"/admin/faq?token={token}", status_code=303)
+
+
+@router.post("/faq/{doc_id}/delete", response_class=RedirectResponse)
+def faq_delete(
+    doc_id: str,
+    token: str = Query(default=""),
+    _: str = Depends(require_admin),
+    db: DbSession = Depends(get_db),
+) -> RedirectResponse:
+    doc = db.get(FaqDoc, doc_id)
+    if doc:
+        db.delete(doc); db.commit()
+        _audit(db, action="delete_faq", target_type="faq_doc", target_id=doc_id)
     return RedirectResponse(url=f"/admin/faq?token={token}", status_code=303)
 
 
