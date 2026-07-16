@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Thai Farmer LINE LLM Agent — Data Architecture</title>
+<style>
+  @page { size: A4; margin: 12mm 12mm 10mm 12mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    color: #1b2733; font-size: 8.6px; line-height: 1.35;
+  }
+  h1 { font-size: 17px; margin: 0 0 2px; color: #0f4c5c; }
+  h2 { font-size: 10.5px; margin: 9px 0 4px; color: #0f4c5c;
+       border-bottom: 1.4px solid #2a9d8f; padding-bottom: 2px; }
+  .sub { color: #5b6b78; font-size: 8.4px; margin: 0 0 6px; }
+  .meta { font-size: 7.6px; color: #5b6b78; }
+  .cols { display: flex; gap: 10px; }
+  .col { flex: 1; }
+  table { width: 100%; border-collapse: collapse; margin: 2px 0 4px; }
+  th, td { border: 0.6px solid #cfd8dd; padding: 2.2px 4px; text-align: left;
+           vertical-align: top; }
+  th { background: #e8f3f1; color: #0f4c5c; font-weight: 600; }
+  code { background: #eef2f4; padding: 0 2px; border-radius: 2px; font-size: 8px; }
+  ul { margin: 2px 0 4px; padding-left: 13px; }
+  li { margin: 1px 0; }
+  .pill { display:inline-block; background:#2a9d8f; color:#fff; border-radius:8px;
+          padding:0.5px 6px; font-size:7.4px; margin-right:3px; }
+  .page-break { page-break-before: always; }
+  .flow { width: 100%; height: auto; }
+  .note { background:#fff6e9; border:0.6px solid #f0c982; border-radius:4px;
+          padding:4px 6px; font-size:8px; }
+  .legend span { margin-right:10px; font-size:7.6px; }
+  .sw { display:inline-block; width:9px; height:9px; border-radius:2px;
+        vertical-align:-1px; margin-right:3px; }
+</style>
+</head>
+<body>
+
+  <h1>Thai Farmer LINE LLM Advisory Agent — Data Architecture</h1>
+  <div class="sub">Farmers chat in Thai over LINE with a guardrailed LLM agent. Domain questions are answered <b>only</b> from a curated FAQ knowledge base (RAG) with citations; admins review every interaction.</div>
+  <div class="meta">Version 0.1 (Draft) &nbsp;•&nbsp; Status: For review &nbsp;•&nbsp; 2026-07-16 &nbsp;•&nbsp; Owner: Platform Engineering</div>
+
+  <h2>System &amp; Data Flow</h2>
+  <svg class="flow" viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" font-family="Arial" font-size="12">
+    <defs>
+      <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#42606e"/>
+      </marker>
+      <style>
+        .box{rx:7; stroke-width:1.3;}
+        .lbl{fill:#12333d; font-size:11px; text-anchor:middle;}
+        .lblw{fill:#ffffff; font-size:11px; text-anchor:middle; font-weight:bold;}
+        .edge{stroke:#42606e; stroke-width:1.4; fill:none; marker-end:url(#arrow);}
+        .elbl{fill:#42606e; font-size:9px; text-anchor:middle;}
+      </style>
+    </defs>
+
+    <!-- Actor: Farmer -->
+    <rect x="8" y="120" width="86" height="42" rx="7" fill="#e0f0ed" stroke="#2a9d8f"/>
+    <text class="lbl" x="51" y="138">Farmer</text>
+    <text class="lbl" x="51" y="152" font-size="9">Thai text/voice</text>
+
+    <!-- LINE -->
+    <rect x="120" y="120" width="86" height="42" rx="7" fill="#06c755" stroke="#059f45"/>
+    <text class="lblw" x="163" y="138">LINE</text>
+    <text class="lblw" x="163" y="152" font-size="9">Platform</text>
+
+    <!-- Gateway -->
+    <rect x="232" y="112" width="96" height="58" rx="7" fill="#e8f3f1" stroke="#0f4c5c"/>
+    <text class="lbl" x="280" y="130">Channel</text>
+    <text class="lbl" x="280" y="144">Gateway API</text>
+    <text class="elbl" x="280" y="160">sig verify • dedupe</text>
+
+    <!-- Orchestrator -->
+    <rect x="354" y="108" width="108" height="66" rx="7" fill="#0f4c5c" stroke="#0a3742"/>
+    <text class="lblw" x="408" y="130">Agent</text>
+    <text class="lblw" x="408" y="144">Orchestrator</text>
+    <text class="lblw" x="408" y="160" font-size="8.5">intent • safety • route</text>
+
+    <!-- Branch: Smalltalk / LLM -->
+    <rect x="500" y="34" width="120" height="46" rx="7" fill="#e8f3f1" stroke="#0f4c5c"/>
+    <text class="lbl" x="560" y="52">LLM Service</text>
+    <text class="lbl" x="560" y="66" font-size="9">general / guardrailed</text>
+
+    <!-- Retrieval -->
+    <rect x="500" y="128" width="120" height="46" rx="7" fill="#e8f3f1" stroke="#0f4c5c"/>
+    <text class="lbl" x="560" y="146">Retrieval (RAG)</text>
+    <text class="lbl" x="560" y="160" font-size="9">top-k vector search</text>
+
+    <!-- KB -->
+    <path d="M652,196 a44,9 0 0,0 88,0 v-40 a44,9 0 0,0 -88,0 z" fill="#f4a261" stroke="#d98745"/>
+    <ellipse cx="696" cy="156" rx="44" ry="9" fill="#f6b47c" stroke="#d98745"/>
+    <text class="lbl" x="696" y="176" font-size="10">Knowledge Base</text>
+    <text class="lbl" x="696" y="189" font-size="8.5">FAQ + vectors</text>
+
+    <!-- Conversation Store -->
+    <path d="M366,286 a44,9 0 0,0 88,0 v-40 a44,9 0 0,0 -88,0 z" fill="#457b9d" stroke="#2f5a75"/>
+    <ellipse cx="410" cy="246" rx="44" ry="9" fill="#5a90b0" stroke="#2f5a75"/>
+    <text class="lblw" x="410" y="266" font-size="10">Conversation</text>
+    <text class="lblw" x="410" y="279" font-size="8.5">msgs • citations</text>
+
+    <!-- Admin Portal -->
+    <rect x="500" y="228" width="120" height="52" rx="7" fill="#264653" stroke="#152a33"/>
+    <text class="lblw" x="560" y="248">Admin Portal</text>
+    <text class="lblw" x="560" y="262" font-size="9">review • FAQ mgmt</text>
+    <text class="lblw" x="560" y="274" font-size="8">RBAC + audit</text>
+
+    <!-- Audit -->
+    <path d="M700,286 a40,8 0 0,0 80,0 v-34 a40,8 0 0,0 -80,0 z" fill="#8d99ae" stroke="#6c7688"/>
+    <ellipse cx="740" cy="252" rx="40" ry="8" fill="#a2adbf" stroke="#6c7688"/>
+    <text class="lblw" x="740" y="270" font-size="9">Audit Log</text>
+
+    <!-- Edges -->
+    <path class="edge" d="M94,141 H118"/>
+    <path class="edge" d="M206,141 H230"/>
+    <text class="elbl" x="219" y="134">webhook</text>
+    <path class="edge" d="M328,141 H352"/>
+    <path class="edge" d="M462,128 C482,110 484,80 498,64"/>
+    <text class="elbl" x="470" y="92">general</text>
+    <path class="edge" d="M462,150 H498"/>
+    <text class="elbl" x="480" y="144">domain</text>
+    <path class="edge" d="M620,151 H650"/>
+    <path class="edge" d="M696,196 C696,214 470,232 456,244"/>
+    <text class="elbl" x="560" y="214">chunks + scores</text>
+    <path class="edge" d="M408,174 V240"/>
+    <text class="elbl" x="386" y="210">persist</text>
+    <path class="edge" d="M560,80 C560,96 470,120 462,132"/>
+    <text class="elbl" x="512" y="104">answer + citations</text>
+    <path class="edge" d="M454,258 H498"/>
+    <text class="elbl" x="476" y="252">read</text>
+    <path class="edge" d="M620,258 H698"/>
+    <text class="elbl" x="660" y="252">write</text>
+    <!-- reply back -->
+    <path class="edge" d="M356,120 C300,60 220,70 165,118" stroke-dasharray="4 3"/>
+    <text class="elbl" x="250" y="70">reply (Thai)</text>
+  </svg>
+  <div class="legend" style="text-align:center; margin-top:-2px;">
+    <span><i class="sw" style="background:#06c755"></i>Channel</span>
+    <span><i class="sw" style="background:#0f4c5c"></i>Compute</span>
+    <span><i class="sw" style="background:#f4a261"></i>Knowledge store</span>
+    <span><i class="sw" style="background:#457b9d"></i>Conversation store</span>
+    <span><i class="sw" style="background:#264653"></i>Admin</span>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h2>Anti-Misinformation Controls (data-level)</h2>
+      <ul>
+        <li><b>Grounded-only answers</b>: domain replies must carry ≥1 <code>citation</code>; else blocked.</li>
+        <li><b>Confidence gate</b>: retrieval score below threshold → clarify/refuse, never hallucinate.</li>
+        <li><b>High-risk blocklist</b>: pesticide dosage, medical, legal, finance → safe template + escalate.</li>
+        <li><b>Published-only retrieval</b>: only <code>status=published</code> within <code>valid_from/to</code>.</li>
+        <li><b>Source attribution</b>: authoritative <code>source</code> (e.g. DOA/RD) surfaced in answer.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h2>Data Stores</h2>
+      <table>
+        <tr><th>Store</th><th>Tech</th><th>Holds</th></tr>
+        <tr><td>Relational</td><td>PostgreSQL</td><td>identity, consent, sessions, messages, FAQ meta</td></tr>
+        <tr><td>Vector</td><td>pgvector / Qdrant</td><td>FAQ chunk embeddings</td></tr>
+        <tr><td>Cache</td><td>Redis</td><td>session context, dedupe, rate-limit</td></tr>
+        <tr><td>Object</td><td>S3 / MinIO</td><td>media, exports</td></tr>
+        <tr><td>Audit</td><td>append-only + WORM</td><td>admin access trail</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page-break"></div>
+
+  <h2>Core Data Entities</h2>
+  <div class="cols">
+    <div class="col">
+      <table>
+        <tr><th>Entity</th><th>Key fields</th></tr>
+        <tr><td><b>farmer</b></td><td>id, line_user_id (pseudonymous), province, preferred_lang, status</td></tr>
+        <tr><td><b>consent</b></td><td>farmer_id, purpose(service/analytics/contact), granted, version</td></tr>
+        <tr><td><b>session</b></td><td>farmer_id, channel, context_summary, state(JSONB)</td></tr>
+        <tr><td><b>message</b></td><td>session_id, direction, role, content, intent, <b>route</b>, model, tokens, confidence, latency</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <table>
+        <tr><th>Entity</th><th>Key fields</th></tr>
+        <tr><td><b>faq_doc</b></td><td>title, category, body_th, source, status, version, valid_from/to</td></tr>
+        <tr><td><b>faq_chunk</b></td><td>faq_doc_id, text, <b>embedding(vector)</b>, hash</td></tr>
+        <tr><td><b>citation</b></td><td>message_id → faq_chunk_id, score</td></tr>
+        <tr><td><b>audit_event</b></td><td>actor, action, target, metadata (append-only)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h2>Message Routes</h2>
+      <ul>
+        <li><span class="pill">smalltalk</span> general chat via guardrailed LLM.</li>
+        <li><span class="pill">faq_grounded</span> answered from KB with citations.</li>
+        <li><span class="pill">refused</span> weak match / high-risk → safe response.</li>
+        <li><span class="pill">escalated</span> handed to admin / human.</li>
+      </ul>
+      <h2>Retention &amp; Lifecycle</h2>
+      <table>
+        <tr><th>Data</th><th>Hot</th><th>Then</th></tr>
+        <tr><td>Message content</td><td>90d</td><td>archive 1y → delete</td></tr>
+        <tr><td>Media</td><td>30d</td><td>delete w/ message</td></tr>
+        <tr><td>Session (Redis)</td><td>30m idle</td><td>auto-expire</td></tr>
+        <tr><td>FAQ docs</td><td>versioned</td><td>archive on deprecate</td></tr>
+        <tr><td>Audit</td><td>1–2y</td><td>WORM</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <h2>Governance — PDPA (Thailand)</h2>
+      <ul>
+        <li><b>Consent</b>: purpose-based, versioned; captured at LINE onboarding.</li>
+        <li><b>Minimization</b>: store pseudonymous <code>line_user_id</code>; no phone/national ID.</li>
+        <li><b>Erasure</b>: cascade delete messages/media/embeddings; audit retained lawfully.</li>
+        <li><b>Access/RBAC</b>: roles viewer/editor/dpo; PII view is logged.</li>
+        <li><b>Residency</b>: prefer in-region LLM+stores; redact PII before external model calls.</li>
+      </ul>
+      <div class="note"><b>Key risks →</b> hallucinated agronomic advice (→ grounded-only + citations); stale seasonal FAQ (→ validity dates + review); PII leak to external LLM (→ redaction + DPA); webhook replay (→ signature + idempotency).</div>
+    </div>
+  </div>
+
+  <h2>Non-Functional Highlights</h2>
+  <table>
+    <tr><th>Idempotency</th><th>Latency</th><th>Observability</th><th>Availability</th><th>Backup/DR</th></tr>
+    <tr>
+      <td>Dedupe on <code>line_message_id</code>; retries never double-store</td>
+      <td>Retrieval+gen p95 within LINE reply window; cache hot FAQs</td>
+      <td>tokens, latency, route, confidence per message</td>
+      <td>Stateless gateway/orchestrator; DB replicas; Redis context</td>
+      <td>Postgres PITR; versioned object store; restore tests</td>
+    </tr>
+  </table>
+
+  <div class="meta" style="margin-top:6px;">Open questions: LLM hosting &amp; data residency • voice/STT scope • human-in-the-loop escalation model • multi-tenant vs single-tenant • legal audit retention period.</div>
+
+</body>
+</html>

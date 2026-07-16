@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin · Conversations</title>
+  <style>
+    body { font-family: Arial, "Noto Sans Thai", sans-serif; margin: 24px; color: #1b2733; }
+    h1 { color: #0f4c5c; }
+    nav a { margin-right: 14px; color: #2a9d8f; text-decoration: none; font-weight: bold; }
+    .session { border: 1px solid #d5dee2; border-radius: 8px; margin: 14px 0; padding: 10px 14px; }
+    .msg { padding: 4px 0; border-bottom: 1px dashed #e3e9ec; }
+    .msg:last-child { border-bottom: 0; }
+    .user { color: #264653; }
+    .agent { color: #0f4c5c; }
+    .tag { display:inline-block; font-size:11px; border-radius:6px; padding:1px 7px; color:#fff; margin-left:6px; }
+    .smalltalk{background:#8d99ae;} .faq_grounded{background:#2a9d8f;}
+    .refused{background:#e76f51;} .escalated{background:#e9c46a; color:#333;}
+    .meta { color:#6b7b86; font-size:12px; }
+    .empty { color:#6b7b86; }
+  </style>
+</head>
+<body>
+  <h1>Conversations</h1>
+  <nav>
+    <a href="/admin/conversations?token={{ token }}">Conversations</a>
+    <a href="/admin/faq?token={{ token }}">FAQ</a>
+  </nav>
+  {% if not sessions %}
+    <p class="empty">No conversations yet. Send one via <code>POST /webhook/simulate</code>.</p>
+  {% endif %}
+  {% for s in sessions %}
+    <div class="session">
+      <div class="meta">Session {{ s.id[:8] }} · farmer {{ s.farmer_id[:8] }} · last active {{ s.last_activity_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      {% for m in s.messages %}
+        <div class="msg {{ m.role }}">
+          <b>{{ 'เกษตรกร' if m.role == 'user' else 'ผู้ช่วย' }}:</b> {{ m.content }}
+          {% if m.route %}<span class="tag {{ m.route }}">{{ m.route }}</span>{% endif %}
+          {% if m.confidence is not none %}<span class="meta">conf={{ '%.2f'|format(m.confidence) }}</span>{% endif %}
+          {% if m.citations %}<span class="meta">· {{ m.citations|length }} citation(s)</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</body>
+</html>
