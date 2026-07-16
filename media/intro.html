@@ -38,9 +38,24 @@
           width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
   .demo .cmd { color:#7fd7c9; font-size: clamp(13px,1.7vw,18px); word-break: break-all; }
   .demo .out { color:#f2f6f7; margin-top:14px; font-size: clamp(14px,1.9vw,20px); }
+  .briefing-cards { display:flex; gap:20px; margin-top:28px; flex-wrap:wrap; justify-content:center; }
+  .bcard { background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.18); border-radius:18px;
+           padding:22px 24px; flex:1 1 200px; max-width:260px; text-align:center; }
+  .bcard .icon { font-size:clamp(32px,4vw,48px); }
+  .bcard .label { font-size:clamp(15px,1.8vw,20px); color:#fff; font-weight:700; margin-top:10px; }
+  .bcard .label-th { font-size:clamp(13px,1.5vw,17px); color:#bfe3dd; margin-top:4px; }
   .demo .cite { color: var(--sand); margin-top:10px; font-size: clamp(12px,1.5vw,16px); }
   .tech { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:22px; }
   .url { margin-top:26px; color: var(--sand); font-size: clamp(16px,2.2vw,24px); }
+  .th { color:#bfe3dd; margin-top:10px; }
+  h2 .th, h1 .th { display:block; font-weight:600; }
+  h1 .th { font-size: clamp(22px,3.4vw,40px); margin-top:12px; }
+  h2 .th { font-size: clamp(18px,2.6vw,30px); margin-top:8px; }
+  p .th { display:block; font-size: clamp(15px,2vw,22px); margin-top:8px; }
+  .creators { margin-top:6px; }
+  .creators .names { font-size: clamp(22px,3.4vw,40px); color:#fff; font-weight:700; }
+  .creators .aff { font-size: clamp(15px,2vw,22px); color:#cfe6e3; margin-top:8px; }
+  .creators .aff-th { font-size: clamp(15px,2vw,22px); color:#bfe3dd; margin-top:4px; }
   .progress { position: fixed; bottom: 0; left: 0; height: 5px; background: var(--teal); width: 0; }
   .hint { position: fixed; bottom: 16px; right: 20px; font-size: 13px; color: rgba(255,255,255,.45); }
   .logo { position: fixed; top: 22px; left: 26px; font-weight: 700; color: rgba(255,255,255,.75);
@@ -52,57 +67,105 @@
   <div class="stage">
     <!-- 1 Hook -->
     <section class="slide">
-      <div class="kicker">AI for Thai Farmers</div>
-      <h1>Safe farming answers,<br/>right inside LINE.</h1>
-      <p>An AI assistant farmers chat with on the app they already use every day — built to be trustworthy, not just clever.</p>
+      <div class="kicker">AI for Thai Farmers · เอไอเพื่อเกษตรกรไทย</div>
+      <h1>Safe farming answers,<br/>right inside LINE.
+        <span class="th">คำตอบด้านการเกษตรที่เชื่อถือได้ ผ่านแอป LINE</span></h1>
+      <p>An assistant farmers can ask on the app they already use — so they get trusted answers instead of following false advice.
+        <span class="th">ผู้ช่วยที่เกษตรกรถามได้ผ่านแอปที่ใช้อยู่ทุกวัน เพื่อรับคำตอบที่เชื่อถือได้ แทนการเชื่อคำแนะนำที่ผิด</span></p>
     </section>
 
     <!-- 2 Problem -->
     <section class="slide">
-      <div class="kicker">The Problem</div>
-      <h2>Wrong advice ruins a harvest.</h2>
-      <p>General chatbots hallucinate. For pesticide doses, plant disease and soil care, a made-up answer has real cost. So every agriculture answer is grounded in an expert-reviewed knowledge base.</p>
+      <div class="kicker">The Problem · ปัญหา</div>
+      <h2>Wrong advice ruins a harvest.
+        <span class="th">คำแนะนำที่ผิดทำลายผลผลิต</span></h2>
+      <p>Many farmers have limited access to reliable information and follow false advice. This assistant gives them a trusted place to ask — with every agriculture answer grounded in an expert-reviewed knowledge base.
+        <span class="th">เกษตรกรจำนวนมากเข้าถึงข้อมูลที่เชื่อถือได้ยาก และมักเชื่อคำแนะนำที่ผิด ระบบนี้เป็นแหล่งถามที่ไว้ใจได้ โดยคำตอบด้านการเกษตรทุกคำอ้างอิงจากคลังความรู้ที่ผู้เชี่ยวชาญตรวจสอบ</span></p>
     </section>
 
     <!-- 3 Demo -->
     <section class="slide">
-      <div class="kicker">Live Demo</div>
-      <h2>Grounded &amp; cited — in Thai</h2>
+      <div class="kicker">Live Demo · ตัวอย่างการใช้งาน</div>
+      <h2>Grounded &amp; cited — in Thai
+        <span class="th">อ้างอิงจากแหล่งข้อมูลที่ตรวจสอบแล้ว</span></h2>
       <div class="demo">
         <div class="cmd">POST /webhook/simulate&nbsp;&nbsp;{ "text": "ข้าวใบเหลืองควรทำอย่างไร" }</div>
         <div class="out thai">→ ตอบจากคลังความรู้ที่ผ่านการตรวจสอบ พร้อมคำแนะนำการดูแลข้าว…</div>
-        <div class="cite">📎 Source: curated FAQ · Rice Dept (published, in-date)</div>
+        <div class="cite">📎 Source · แหล่งอ้างอิง: curated FAQ · Rice Dept (published, in-date)</div>
       </div>
-      <p>No verified source? No answer. The model never invents facts.</p>
+      <p>No verified source, no answer. The model never invents facts.
+        <span class="th">ไม่มีแหล่งอ้างอิง ก็ไม่ตอบ ระบบจะไม่แต่งข้อมูลขึ้นเอง</span></p>
     </section>
 
     <!-- 4 Guardrails -->
     <section class="slide">
-      <div class="kicker">Guardrails</div>
-      <h2>Safety the model can't override</h2>
+      <div class="kicker">Guardrails · ระบบความปลอดภัย</div>
+      <h2>Safety the model can't override
+        <span class="th">ความปลอดภัยที่ AI ข้ามไม่ได้</span></h2>
       <div class="rules">
-        <div class="rule"><span class="dot" style="background:var(--coral)"></span> High-risk topics (dosage, medical, legal) → refused &amp; escalated</div>
-        <div class="rule"><span class="dot" style="background:var(--teal)"></span> Domain answers → grounded &amp; cited, or refused</div>
-        <div class="rule"><span class="dot" style="background:var(--sand)"></span> Only published, in-date knowledge is retrievable</div>
+        <div class="rule"><span class="dot" style="background:var(--coral)"></span> High-risk topics → refused &amp; escalated · คำถามความเสี่ยงสูง → ปฏิเสธและส่งต่อผู้เชี่ยวชาญ</div>
+        <div class="rule"><span class="dot" style="background:var(--teal)"></span> Domain answers → grounded &amp; cited, or refused · คำตอบการเกษตร → อ้างอิงได้ หรือปฏิเสธ</div>
+        <div class="rule"><span class="dot" style="background:var(--sand)"></span> Only published, in-date knowledge is used · ใช้เฉพาะข้อมูลที่เผยแพร่และยังไม่หมดอายุ</div>
       </div>
     </section>
 
     <!-- 5 Admin -->
     <section class="slide">
-      <div class="kicker">Admin Portal</div>
-      <h2>Every conversation, reviewed</h2>
-      <p>Password sign-in for admins to review chats, manage the knowledge base, and keep a full audit trail — aligned with Thailand's PDPA privacy law.</p>
+      <div class="kicker">Admin Portal · ระบบผู้ดูแล</div>
+      <h2>Every conversation, reviewed
+        <span class="th">ทุกบทสนทนาได้รับการตรวจสอบ</span></h2>
+      <p>Experts sign in to review chats, manage the knowledge base, and keep a full audit trail — aligned with Thailand's PDPA privacy law.
+        <span class="th">ผู้เชี่ยวชาญเข้าสู่ระบบเพื่อตรวจสอบบทสนทนา จัดการคลังความรู้ และเก็บบันทึกการตรวจสอบ สอดคล้องกับ พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)</span></p>
       <div class="tech">
-        <span class="chip">Conversations</span>
-        <span class="chip">FAQ manager</span>
-        <span class="chip">Audit log</span>
+        <span class="chip">Conversations · บทสนทนา</span>
+        <span class="chip">FAQ manager · คลังความรู้</span>
+        <span class="chip">Audit log · บันทึกตรวจสอบ</span>
       </div>
     </section>
 
-    <!-- 6 Close -->
+    <!-- 6 Daily Briefing -->
     <section class="slide">
-      <div class="kicker">Live Now</div>
-      <h1>Safe. Grounded.<br/>Ready to help.</h1>
+      <div class="kicker">Daily Briefing · ข้อมูลประจำวัน</div>
+      <h2>Vital updates — first message of every day
+        <span class="th">ข้อมูลสำคัญส่งให้อัตโนมัติในข้อความแรกของวัน</span></h2>
+      <div class="briefing-cards">
+        <div class="bcard">
+          <div class="icon">🌤️</div>
+          <div class="label">Chiang Mai Weather</div>
+          <div class="label-th">พยากรณ์อากาศเชียงใหม่</div>
+        </div>
+        <div class="bcard">
+          <div class="icon">📢</div>
+          <div class="label">Govt Incentives</div>
+          <div class="label-th">มาตรการ/สิทธิประโยชน์รัฐบาล</div>
+        </div>
+        <div class="bcard">
+          <div class="icon">⚠️</div>
+          <div class="label">False News Alerts</div>
+          <div class="label-th">ข่าวลือ/ข้อมูลเท็จที่ควรระวัง</div>
+        </div>
+      </div>
+      <p style="margin-top:22px">Sent automatically, once per day, only on the farmer's first message.
+        <span class="th">ส่งอัตโนมัติวันละครั้ง เฉพาะข้อความแรกของวัน</span></p>
+    </section>
+
+    <!-- 6 Creators -->
+    <section class="slide">
+      <div class="kicker">Created By · ผู้พัฒนา</div>
+      <div class="creators">
+        <div class="names">Dr. Eye &amp; Dr. Ploy · ดร.อาย และ ดร.พลอย</div>
+        <div class="aff">PhD graduates, Department of Agriculture — Chiang Mai University</div>
+        <div class="aff-th">ภาควิชาเกษตรศาสตร์ มหาวิทยาลัยเชียงใหม่</div>
+      </div>
+      <p>Bringing new technology to farmers — so they can ask, instead of following false advice.
+        <span class="th">นำเทคโนโลยีใหม่สู่เกษตรกร ให้ถามได้ แทนการเชื่อคำแนะนำที่ผิด</span></p>
+    </section>
+
+    <!-- 7 Close -->
+    <section class="slide">
+      <div class="kicker">Live Now · พร้อมใช้งาน</div>
+      <h1>Safe. Grounded.<br/>Ready to help.
+        <span class="th">ปลอดภัย เชื่อถือได้ พร้อมช่วยเหลือ</span></h1>
       <div class="tech">
         <span class="chip">Powered by Claude</span>
         <span class="chip">FastAPI</span>
@@ -117,7 +180,7 @@
 
 <script>
   const slides = Array.from(document.querySelectorAll('.slide'));
-  const durations = [7000, 8000, 9000, 9000, 8000, 7000]; // ms per slide (~48s total)
+  const durations = [9000, 11000, 11000, 11000, 10000, 11000, 9000, 8000]; // ms per slide (~80s total)
   const progress = document.getElementById('progress');
   let i = 0, timer = null, start = 0, raf = null;
 

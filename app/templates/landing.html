@@ -165,7 +165,15 @@
   <p class="sub">Built for accuracy, safety, and trust · สร้างขึ้นเพื่อความถูกต้อง ปลอดภัย และน่าเชื่อถือ</p>
   <div class="features">
     <div class="feature">
-      <span class="feat-icon">🛡️</span>
+      <span class="feat-icon">�</span>
+      <div>
+        <h3>Daily briefing — first message of the day</h3>
+        <div class="th">ข้อมูลประจำวันในข้อความแรกของวัน</div>
+        <p>Every farmer automatically receives Chiang Mai weather, latest government incentives, and circulating false-news alerts — once per day, on their first chat.</p>
+      </div>
+    </div>
+    <div class="feature">
+      <span class="feat-icon">�🛡️</span>
       <div>
         <h3>Hard guardrails</h3>
         <div class="th">ระบบป้องกันที่แน่นหนา</div>
@@ -212,6 +220,37 @@
         <p>Pseudonymous IDs only. Purpose-based consent, audit events on every admin view, and erasure cascade on deletion.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- DAILY BRIEFING SECTION -->
+<section>
+  <h2>Daily briefing <span class="th">ข้อมูลประจำวัน</span></h2>
+  <p class="sub">Automatically sent on each farmer's first message of the day · ส่งอัตโนมัติในข้อความแรกของวัน (Bangkok time)</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">🌤️</div>
+      <h3>Chiang Mai Weather</h3>
+      <p class="th">พยากรณ์อากาศเชียงใหม่</p>
+      <p>Real-time temperature, humidity, wind and conditions from OpenWeatherMap — so farmers know what field conditions to expect.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">📢</div>
+      <h3>Government Incentives</h3>
+      <p class="th">มาตรการ/สิทธิประโยชน์รัฐบาล</p>
+      <p>Latest subsidies, income-guarantee programs and BAAC loan schemes curated by experts — farmers never miss a benefit they're entitled to.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">⚠️</div>
+      <h3>False News Alerts</h3>
+      <p class="th">ข่าวลือ/ข้อมูลเท็จที่ควรระวัง</p>
+      <p>Verified alerts about misinformation circulating on LINE groups — fake fertiliser claims, unlicensed chemicals, unverified techniques.</p>
+    </div>
+  </div>
+  <div style="margin-top:24px;background:var(--light);border-radius:14px;padding:18px 22px;font-size:14px;color:#41525c;max-width:760px">
+    <strong>How admins keep it current:</strong> Log in to <a href="/admin/faq" style="color:var(--teal)">Admin → FAQ</a> and add entries under categories
+    <code>government_incentive</code> or <code>false_news_alert</code> — they go live instantly.
+    Weather is fetched automatically from OpenWeatherMap (set <code>OPENWEATHER_API_KEY</code> in Render env).
   </div>
 </section>
 
