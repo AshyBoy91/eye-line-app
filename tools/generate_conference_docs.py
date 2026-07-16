@@ -50,8 +50,8 @@ PAPER_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 
 <div class="title">
   <h1>GuardedRAG: A Safety-First Conversational AI Agent<br/>for Thai Agricultural Extension via LINE Messaging</h1>
-  <div class="authors">Eye Pornpimol &amp; Ploy Natthakan</div>
-  <div class="affil">Department of Agriculture, Faculty of Agriculture · Chiang Mai University, Thailand</div>
+  <div class="authors">Toungporn Uttarotai &amp; Daranrat Jaitiang</div>
+  <div class="affil">Faculty of Agriculture · Chiang Mai University, Thailand<br/>Dept of Highland Agriculture &amp; Natural Resources · Dept of Agricultural Economy &amp; Development</div>
   <div class="date">Presented at: National Agriculture Conference, Bangkok · July 2026</div>
 </div>
 <hr class="divider"/>
@@ -179,7 +179,7 @@ PAPER_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 <p class="ref">Anthropic (2024). Claude model family technical overview. <em>anthropic.com/research</em>.</p>
 <p class="ref">LINE Corporation (2024). LINE Messaging API documentation. <em>developers.line.biz</em>.</p>
 
-<div class="footer">GuardedRAG · Dr. Eye &amp; Dr. Ploy · Department of Agriculture, Chiang Mai University · July 2026</div>
+<div class="footer">GuardedRAG · Dr. Toungporn Uttarotai &amp; Dr. Daranrat Jaitiang · Faculty of Agriculture, Chiang Mai University · July 2026</div>
 </body></html>"""
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -301,8 +301,8 @@ FLYER_HTML = """<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"/>
 </div>
 
 <div class="footer">
-  <div><strong>Dr. Eye &amp; Dr. Ploy (ดร.อาย &amp; ดร.พลอย)</strong><br/>
-  Department of Agriculture · Chiang Mai University</div>
+  <div><strong>Dr. Toungporn Uttarotai &amp; Dr. Daranrat Jaitiang</strong><br/>
+  Faculty of Agriculture · Chiang Mai University</div>
   <div style="text-align:right;">National Agriculture Conference<br/>Bangkok · July 2026</div>
 </div>
 
@@ -362,7 +362,7 @@ DEPT_HTML = """<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"/>
 
 <div class="banner">
   <div>
-    <h1>Department of Agriculture<br/>Chiang Mai University</h1>
+    <h1>Faculty of Agriculture<br/>Chiang Mai University</h1>
     <div class="th">ภาควิชาเกษตรศาสตร์ มหาวิทยาลัยเชียงใหม่</div>
     <div class="univ">Faculty of Agriculture · คณะเกษตรศาสตร์</div>
   </div>
@@ -374,8 +374,15 @@ DEPT_HTML = """<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"/>
   <div class="team-grid">
     <div class="person">
       <div class="avatar">A</div>
-      <h3>Dr. Eye (Pornpimol)</h3>
-      <div class="title-th">ดร.อาย (พรพิมล)</div>
+      <h3>Dr. Toungporn (Uttarotai)</h3>
+        <div class="title-th">ดร.ตวงพร (อุตรโรตไทย)</div>
+        <div class="role">
+          PhD in Microbiology / Highland Agriculture<br/>
+          Dept of Highland Agriculture &amp; Natural Resources<br/>
+          Research: AI applications in plant disease identification
+        </div>
+        <div class="focus">Focus: Knowledge base design · Image analysis · Field validation</div>
+      <div class="title-th">ดร.ตวงพร (อุตรโรตไทย)</div>
       <div class="role">
         PhD in Agricultural Science<br/>
         Specialisation: Crop Protection &amp; Plant Pathology<br/>
@@ -385,8 +392,15 @@ DEPT_HTML = """<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"/>
     </div>
     <div class="person">
       <div class="avatar">P</div>
-      <h3>Dr. Ploy (Natthakan)</h3>
-      <div class="title-th">ดร.พลอย (ณัฐกาน)</div>
+      <h3>Dr. Daranrat (Jaitiang)</h3>
+        <div class="title-th">ดร.ดารารัตน์ (ใจเที่ยง)</div>
+        <div class="role">
+          PhD in Agricultural Extension<br/>
+          Dept of Agricultural Economy &amp; Development<br/>
+          Research: Digital tools for smallholder farmers
+        </div>
+        <div class="focus">Focus: Farmer UX · Content curation · PDPA compliance</div>
+      <div class="title-th">ดร.ดารารัตน์ (ใจเที่ยง)</div>
       <div class="role">
         PhD in Agricultural Science<br/>
         Specialisation: Soil Science &amp; Sustainable Agriculture<br/>
@@ -445,7 +459,7 @@ DEPT_HTML = """<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"/>
 </div>
 
 <div class="footer">
-  <div>Department of Agriculture · Chiang Mai University · ภาควิชาเกษตรศาสตร์ มช.</div>
+  <div>Faculty of Agriculture · Chiang Mai University · คณะเกษตรศาสตร์ มช.</div>
   <div>National Agriculture Conference · Bangkok · July 2026</div>
 </div>
 
