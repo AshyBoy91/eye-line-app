@@ -89,7 +89,13 @@ class AnthropicLLM(LLM):
             },
             timeout=45,
         )
-        resp.raise_for_status()
+        if not resp.is_success:
+            import sys
+            print(
+                f"[AnthropicLLM] HTTP {resp.status_code}: {resp.text[:500]}",
+                file=sys.stderr,
+            )
+            resp.raise_for_status()
         blocks = resp.json().get("content", [])
         text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
         return text.strip()
