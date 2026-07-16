@@ -30,15 +30,27 @@ DOMAIN_KEYWORDS = [
 
 GREETING_KEYWORDS = ["สวัสดี", "หวัดดี", "ขอบคุณ", "hello", "hi", "thanks", "ขอบใจ"]
 
+HELP_KEYWORDS = [
+    "วิธีใช้", "ใช้งานยังไง", "ใช้ยังไง", "ทำอะไรได้", "ช่วยอะไรได้",
+    "help", "how to use", "what can you do", "ฟังก์ชัน", "เมนู",
+]
+
 
 def is_high_risk(text: str) -> bool:
     low = text.lower()
     return any(kw.lower() in low for kw in HIGH_RISK_KEYWORDS)
 
 
-def classify_intent(text: str) -> str:
-    """Return 'domain' for agriculture questions, else 'smalltalk'."""
+def is_help_request(text: str) -> bool:
     low = text.lower()
+    return any(kw.lower() in low for kw in HELP_KEYWORDS)
+
+
+def classify_intent(text: str) -> str:
+    """Return 'domain' for agriculture questions, 'help' for how-to requests, else 'smalltalk'."""
+    low = text.lower()
+    if is_help_request(text):
+        return "help"
     if any(kw.lower() in low for kw in DOMAIN_KEYWORDS):
         return "domain"
     return "smalltalk"

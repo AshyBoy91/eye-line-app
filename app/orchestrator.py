@@ -60,7 +60,12 @@ def handle(
 
     intent = guardrails.classify_intent(text)
 
-    # 2) General chat — guardrailed LLM, no grounding required.
+    # 2a) Help/how-it-works request
+    if intent == "help":
+        from .line_client import HOW_IT_WORKS_TH
+        return finish(reply=HOW_IT_WORKS_TH, intent="help", route="smalltalk")
+
+    # 2b) General chat
     if intent == "smalltalk":
         return finish(
             reply=llm.generate(text, context_chunks=None, history=history),
