@@ -23,8 +23,23 @@
     <a href="/admin/conversations?token={{ token }}">Conversations</a>
     <a href="/admin/faq?token={{ token }}">FAQ</a>
     <a href="/admin/compare?token={{ token }}">⚖️ Compare LLMs</a>
+    <a href="/admin/stats?token={{ token }}">📊 Stats</a>
     <a href="/admin/logout">Logout</a>
   </nav>
+  {% if request.query_params.get('reseeded') %}
+  <div style="background:#d4edda;color:#155724;padding:10px 14px;border-radius:8px;margin:12px 0;font-size:14px;">
+    ✓ Re-seeded {{ request.query_params.get('reseeded') }} FAQ entries successfully.
+  </div>
+  {% endif %}
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <span style="font-size:13px;color:#6b7b86;">{{ docs|length }} entries</span>
+    <form method="post" action="/admin/reseed?token={{ token }}"
+          onsubmit="return confirm('This deletes ALL FAQ entries and reloads the default 25-entry dataset. Continue?')">
+      <button type="submit" style="background:#e76f51;color:#fff;border:0;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;">
+        🔄 Reset &amp; Re-seed (25 entries)
+      </button>
+    </form>
+  </div>
 
   <table>
     <tr><th>Title</th><th>Category</th><th>Source</th><th>Status</th><th>Valid</th><th>Chunks</th><th>Updated</th><th>Actions</th></tr>

@@ -44,7 +44,19 @@ def _process(
     conversation.log_inbound(db, session, text or "[image]", line_message_id)
 
     history = get_recent_history(db, session)
-    result = handle(db, text or "", history=history, image_b64=image_b64)
+    try:
+        result = handle(db, text or "", history=history, image_b64=image_b64)
+    except Exception as exc:
+        import sys
+        print(f"[webhook] LLM error for user {line_user_id}: {exc}", file=sys.stderr)
+        from ..guardrails import LLM_ERROR_RESPONSE_TH
+        from ..orchestrator import AgentResult
+        result = AgentResult(
+            reply=LLM_ERROR_RESPONSE_TH,
+            intent="error",
+            route="error",
+            model="error",
+        )
 
     conversation.log_outbound(db, session, result)
     db.commit()

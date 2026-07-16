@@ -20,6 +20,7 @@ from ..config import settings
 from ..database import get_db
 from ..llm import AnthropicLLM, OpenAILLM
 from ..models import AuditEvent, FaqDoc, Message, Session
+from ..seed import reembed_doc, seed_if_empty
 from ..seed import reembed_doc
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -75,6 +76,22 @@ def logout() -> RedirectResponse:
     resp = RedirectResponse(url="/admin/login", status_code=303)
     resp.delete_cookie(ADMIN_COOKIE)
     return resp
+
+
+@router.post("/reseed")
+def reseed(
+    token: str = Query(default=""),
+    _: str = Depends(require_admin),
+    db: DbSession = Depends(get_db),
+) -> RedirectResponse:
+    """Delete all FAQ docs (cascade to chunks) and re-seed from the default dataset."""
+    docs = db.scalars(select(FaqDoc)).all()
+    for doc in docs:
+        db.delete(doc)
+    db.commit()
+    n = seed_if_empty(db)
+    _audit(db, action="reseed_faq")
+    return RedirectResponse(url=f"/admin/faq?token={token}&reseeded={n}", status_code=303)
 
 
 def _audit(db: DbSession, action: str, target_type: str | None = None, target_id: str | None = None) -> None:
@@ -296,3 +313,93 @@ def api_compare(
             results[provider] = {"reply": f"❌ Error: {exc}", "latency_ms": 0, "model": llm.name}
 
     return results
+
+
+# ── Stats Dashboard ───────────────────────────────────────────────────────────
+
+@router.get("/stats", response_class=HTMLResponse)
+def stats_page(
+    request: Request,
+    token: str = Query(default=""),
+    _: str = Depends(require_admin),
+    db: DbSession = Depends(get_db),
+) -> HTMLResponse:
+    from sqlalchemy import func, case
+    from ..models import FaqChunk
+
+    # Message stats
+    total_sessions = db.scalar(select(func.count()).select_from(Session)) or 0
+    total_msgs = db.scalar(select(func.count()).select_from(Message)) or 0
+    inbound = db.scalar(select(func.count()).select_from(Message).where(Message.direction == "inbound")) or 0
+
+    route_counts = dict(
+        db.execute(
+            select(Message.route, func.count()).where(Message.route.isnot(None)).group_by(Message.route)
+        ).all()
+    )
+
+    avg_conf = db.scalar(
+        select(func.avg(Message.confidence)).where(
+            Message.route == "faq_grounded", Message.confidence.isnot(None)
+        )
+    )
+
+    avg_latency = db.scalar(
+        select(func.avg(Message.latency_ms)).where(Message.latency_ms > 0)
+    )
+
+    # Daily activity (last 7 days)
+    from datetime import timedelta
+    from ..daily_briefing import today_bangkok
+    today = today_bangkok()
+    daily = {}
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        cnt = db.scalar(
+            select(func.count()).select_from(Message)
+            .where(
+                Message.direction == "inbound",
+                func.date(Message.created_at) == day,
+            )
+        ) or 0
+        daily[day.strftime("%d/%m")] = cnt
+
+    # FAQ stats
+    faq_total = db.scalar(select(func.count()).select_from(FaqDoc)) or 0
+    faq_published = db.scalar(select(func.count()).select_from(FaqDoc).where(FaqDoc.status == "published")) or 0
+    chunk_total = db.scalar(select(func.count()).select_from(FaqChunk)) or 0
+    faq_by_cat = dict(
+        db.execute(
+            select(FaqDoc.category, func.count()).where(FaqDoc.status == "published").group_by(FaqDoc.category)
+        ).all()
+    )
+
+    grounded = route_counts.get("faq_grounded", 0)
+    refused  = route_counts.get("refused", 0)
+    smalltalk = route_counts.get("smalltalk", 0)
+    image_analysis = route_counts.get("image_analysis", 0)
+    error = route_counts.get("error", 0)
+
+    return templates.TemplateResponse(
+        request, "admin_stats.html",
+        {
+            "token": token,
+            "total_sessions": total_sessions,
+            "total_msgs": total_msgs,
+            "inbound": inbound,
+            "grounded": grounded,
+            "refused": refused,
+            "smalltalk": smalltalk,
+            "image_analysis": image_analysis,
+            "error": error,
+            "avg_conf": round(avg_conf * 100) if avg_conf else None,
+            "avg_latency": round(avg_latency) if avg_latency else None,
+            "daily": daily,
+            "faq_total": faq_total,
+            "faq_published": faq_published,
+            "chunk_total": chunk_total,
+            "faq_by_cat": faq_by_cat,
+            "grounding_rate": round(grounded / inbound * 100) if inbound else 0,
+            "refusal_rate": round(refused / inbound * 100) if inbound else 0,
+        },
+    )

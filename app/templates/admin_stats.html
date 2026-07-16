@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8"/>
+  <title>Admin · Stats</title>
+  <style>
+    body { font-family: Arial, "Noto Sans Thai", sans-serif; margin: 24px; color: #1b2733; }
+    h1 { color: #0f4c5c; }
+    nav a { margin-right: 14px; color: #2a9d8f; text-decoration: none; font-weight: bold; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 20px 0; }
+    .card { background: #f5f9fa; border: 1px solid #d5dee2; border-radius: 12px; padding: 16px 18px; }
+    .card .val { font-size: 32px; font-weight: 800; color: #0f4c5c; line-height: 1.1; }
+    .card .lbl { font-size: 12px; color: #6b7b86; margin-top: 4px; }
+    .card.green .val { color: #2a9d8f; }
+    .card.red   .val { color: #e76f51; }
+    .card.sand  .val { color: #c89a2a; }
+    h2 { font-size: 15px; color: #0f4c5c; margin: 24px 0 10px; border-bottom: 1px solid #d5dee2; padding-bottom: 4px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    .bar-label { width: 130px; color: #264653; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #e8f3f1; border-radius: 999px; height: 16px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 999px; background: #2a9d8f; transition: width .4s; }
+    .bar-fill.red    { background: #e76f51; }
+    .bar-fill.sand   { background: #e9c46a; }
+    .bar-fill.purple { background: #8d99ae; }
+    .bar-fill.blue   { background: #4a90d9; }
+    .bar-count { width: 36px; text-align: right; color: #6b7b86; }
+    .daily-grid { display: flex; gap: 8px; align-items: flex-end; height: 80px; margin: 10px 0; }
+    .day-bar { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .day-fill { background: #2a9d8f; border-radius: 4px 4px 0 0; width: 100%; min-height: 2px; }
+    .day-lbl  { font-size: 10px; color: #6b7b86; }
+    .day-val  { font-size: 10px; color: #0f4c5c; font-weight: 600; }
+    .cat-chip { display: inline-block; background: #e8f3f1; border-radius: 6px; padding: 3px 10px;
+                font-size: 12px; color: #0f4c5c; margin: 3px; }
+    .note { font-size: 12px; color: #6b7b86; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>📊 Stats Dashboard</h1>
+  <nav>
+    <a href="/admin/conversations?token={{ token }}">Conversations</a>
+    <a href="/admin/faq?token={{ token }}">FAQ</a>
+    <a href="/admin/compare?token={{ token }}">⚖️ Compare LLMs</a>
+    <a href="/admin/stats?token={{ token }}">📊 Stats</a>
+    <a href="/admin/logout">Logout</a>
+  </nav>
+
+  <!-- Top KPIs -->
+  <div class="grid">
+    <div class="card">
+      <div class="val">{{ total_sessions }}</div>
+      <div class="lbl">Total sessions</div>
+    </div>
+    <div class="card">
+      <div class="val">{{ inbound }}</div>
+      <div class="lbl">Farmer questions</div>
+    </div>
+    <div class="card green">
+      <div class="val">{{ grounding_rate }}%</div>
+      <div class="lbl">Grounding rate</div>
+    </div>
+    <div class="card red">
+      <div class="val">{{ refusal_rate }}%</div>
+      <div class="lbl">Refusal rate</div>
+    </div>
+    <div class="card sand">
+      <div class="val">{{ avg_conf if avg_conf else '—' }}{% if avg_conf %}%{% endif %}</div>
+      <div class="lbl">Avg confidence (grounded)</div>
+    </div>
+    <div class="card">
+      <div class="val">{{ avg_latency if avg_latency else '—' }}{% if avg_latency %}ms{% endif %}</div>
+      <div class="lbl">Avg latency</div>
+    </div>
+  </div>
+
+  <!-- Route breakdown -->
+  <h2>Message routes</h2>
+  {% set total_r = grounded + refused + smalltalk + image_analysis + error %}
+  {% if total_r > 0 %}
+    {% for label, count, cls in [
+        ('faq_grounded', grounded, ''),
+        ('refused', refused, 'red'),
+        ('smalltalk', smalltalk, 'sand'),
+        ('image_analysis', image_analysis, 'blue'),
+        ('error', error, 'purple')
+    ] %}
+    <div class="bar-row">
+      <span class="bar-label">{{ label }}</span>
+      <div class="bar-track">
+        <div class="bar-fill {{ cls }}" style="width:{{ (count / total_r * 100)|round }}%"></div>
+      </div>
+      <span class="bar-count">{{ count }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="note">No conversations yet.</p>
+  {% endif %}
+
+  <!-- Daily activity -->
+  <h2>Last 7 days (inbound messages)</h2>
+  {% set max_day = daily.values()|max if daily else 1 %}
+  <div class="daily-grid">
+    {% for day, cnt in daily.items() %}
+    <div class="day-bar">
+      <div class="day-val">{{ cnt }}</div>
+      <div class="day-fill" style="height: {{ [(cnt / max_day * 60)|round, 2]|max }}px"></div>
+      <div class="day-lbl">{{ day }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Knowledge base -->
+  <h2>Knowledge base</h2>
+  <div class="grid">
+    <div class="card green">
+      <div class="val">{{ faq_published }}</div>
+      <div class="lbl">Published entries</div>
+    </div>
+    <div class="card">
+      <div class="val">{{ faq_total }}</div>
+      <div class="lbl">Total entries</div>
+    </div>
+    <div class="card">
+      <div class="val">{{ chunk_total }}</div>
+      <div class="lbl">Indexed chunks</div>
+    </div>
+  </div>
+  <div style="margin-top:8px;">
+    {% for cat, n in faq_by_cat.items() | sort %}
+    <span class="cat-chip">{{ cat }} ({{ n }})</span>
+    {% endfor %}
+  </div>
+
+</body>
+</html>
