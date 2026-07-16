@@ -27,13 +27,30 @@ class LLM(ABC):
     name: str
 
     @abstractmethod
-    def generate(self, user_text: str, context_chunks: list[str] | None) -> str: ...
+    def generate(
+        self,
+        user_text: str,
+        context_chunks: list[str] | None,
+        history: list[dict] | None = None,
+        image_b64: str | None = None,
+    ) -> str: ...
 
 
 class StubLLM(LLM):
     name = "stub-extractive"
 
-    def generate(self, user_text: str, context_chunks: list[str] | None) -> str:
+    def generate(
+        self,
+        user_text: str,
+        context_chunks: list[str] | None,
+        history: list[dict] | None = None,
+        image_b64: str | None = None,
+    ) -> str:
+        if image_b64:
+            return (
+                "ขออภัยครับ ระบบสาธิตยังไม่รองรับการวิเคราะห์รูปภาพ "
+                "กรุณาอธิบายอาการเป็นข้อความแทนครับ"
+            )
         if context_chunks:
             body = "\n".join(f"• {c.strip()}" for c in context_chunks)
             return (
@@ -57,6 +74,41 @@ def _build_user_prompt(user_text: str, context_chunks: list[str] | None) -> str:
     return user_text
 
 
+def _build_messages(
+    user_text: str,
+    context_chunks: list[str] | None,
+    history: list[dict] | None,
+    image_b64: str | None,
+    for_anthropic: bool = False,
+) -> list[dict]:
+    """Build the messages array with optional history and image."""
+    msgs: list[dict] = []
+
+    # Inject conversation history (skip for Anthropic which uses system separately)
+    for turn in (history or []):
+        msgs.append({"role": turn["role"], "content": turn["content"]})
+
+    prompt_text = _build_user_prompt(user_text, context_chunks)
+
+    if image_b64:
+        # Multimodal: image + text
+        if for_anthropic:
+            content = [
+                {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": image_b64}},
+                {"type": "text", "text": prompt_text},
+            ]
+        else:
+            content = [
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}},
+                {"type": "text", "text": prompt_text},
+            ]
+        msgs.append({"role": "user", "content": content})
+    else:
+        msgs.append({"role": "user", "content": prompt_text})
+
+    return msgs
+
+
 class AnthropicLLM(LLM):
     """Anthropic Claude via the Messages API.
 
@@ -68,8 +120,17 @@ class AnthropicLLM(LLM):
         self.model = model
         self.name = f"anthropic:{model}"
 
-    def generate(self, user_text: str, context_chunks: list[str] | None) -> str:
+    def generate(
+        self,
+        user_text: str,
+        context_chunks: list[str] | None,
+        history: list[dict] | None = None,
+        image_b64: str | None = None,
+    ) -> str:
         import httpx
+
+        messages = _build_messages(user_text, context_chunks, history, image_b64, for_anthropic=True)
+        model = self.model if not image_b64 else self.model  # claude-sonnet-4-5 supports vision
 
         resp = httpx.post(
             f"{settings.anthropic_base_url}/messages",
@@ -79,22 +140,17 @@ class AnthropicLLM(LLM):
                 "content-type": "application/json",
             },
             json={
-                "model": self.model,
+                "model": model,
                 "max_tokens": 1024,
                 "temperature": 0.2,
                 "system": SYSTEM_PROMPT_TH,
-                "messages": [
-                    {"role": "user", "content": _build_user_prompt(user_text, context_chunks)}
-                ],
+                "messages": messages,
             },
             timeout=45,
         )
         if not resp.is_success:
             import sys
-            print(
-                f"[AnthropicLLM] HTTP {resp.status_code}: {resp.text[:500]}",
-                file=sys.stderr,
-            )
+            print(f"[AnthropicLLM] HTTP {resp.status_code}: {resp.text[:500]}", file=sys.stderr)
             resp.raise_for_status()
         blocks = resp.json().get("content", [])
         text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
@@ -106,22 +162,24 @@ class OpenAILLM(LLM):
         self.model = model
         self.name = f"openai:{model}"
 
-    def generate(self, user_text: str, context_chunks: list[str] | None) -> str:
+    def generate(
+        self,
+        user_text: str,
+        context_chunks: list[str] | None,
+        history: list[dict] | None = None,
+        image_b64: str | None = None,
+    ) -> str:
         import httpx
 
-        user = _build_user_prompt(user_text, context_chunks)
+        messages = _build_messages(user_text, context_chunks, history, image_b64, for_anthropic=False)
+        # Vision requires gpt-4o or gpt-4o-mini
+        model = "gpt-4o" if image_b64 else self.model
+        full_messages = [{"role": "system", "content": SYSTEM_PROMPT_TH}] + messages
 
         resp = httpx.post(
             f"{settings.openai_base_url}/chat/completions",
             headers={"Authorization": f"Bearer {settings.openai_api_key}"},
-            json={
-                "model": self.model,
-                "temperature": 0.2,
-                "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT_TH},
-                    {"role": "user", "content": user},
-                ],
-            },
+            json={"model": model, "temperature": 0.2, "messages": full_messages},
             timeout=45,
         )
         resp.raise_for_status()

@@ -13,6 +13,9 @@ _tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_tmp.name}")
 os.environ.setdefault("ADMIN_TOKEN", "test-token")
 os.environ.setdefault("ADMIN_PASSWORD", "6969")
+# Force offline embedder for tests — never hit external API
+os.environ["EMBEDDINGS_PROVIDER"] = "hashing"
+os.environ["LLM_PROVIDER"] = "stub"
 
 from fastapi.testclient import TestClient  # noqa: E402
 

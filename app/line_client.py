@@ -10,6 +10,30 @@ import httpx
 from .config import settings
 
 LINE_REPLY_URL = "https://api.line.me/v2/bot/message/reply"
+LINE_CONTENT_URL = "https://api-data.line.me/v2/bot/message/{message_id}/content"
+
+IMAGE_INTRO_TH = (
+    "📸 ได้รับรูปภาพแล้วครับ กำลังวิเคราะห์...\n\n"
+    "ผมสามารถช่วยระบุ: โรคพืช · แมลงศัตรู · ความผิดปกติของใบและลำต้น\n"
+    "กรุณารอสักครู่นะครับ 🌾"
+)
+
+
+def get_image_b64(message_id: str) -> str | None:
+    """Download image content from LINE and return as base64 string."""
+    if not settings.line_channel_access_token:
+        return None
+    try:
+        import base64
+        resp = httpx.get(
+            LINE_CONTENT_URL.format(message_id=message_id),
+            headers={"Authorization": f"Bearer {settings.line_channel_access_token}"},
+            timeout=20,
+        )
+        resp.raise_for_status()
+        return base64.b64encode(resp.content).decode("utf-8")
+    except Exception:
+        return None
 
 
 def verify_signature(body: bytes, signature: str | None) -> bool:

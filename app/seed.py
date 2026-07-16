@@ -165,3 +165,24 @@ def reembed_doc(db: Session, doc: FaqDoc) -> None:
         db.delete(chunk)
     db.flush()
     _embed_doc(db, doc, get_embedder())
+
+
+def reembed_all_if_dim_changed(db: Session) -> int:
+    """Re-embed all FAQ docs if embedder dimension changed (e.g. hashing→openai).
+    Called on startup so switching EMBEDDINGS_PROVIDER auto-reindexes the KB.
+    Returns number of docs re-embedded (0 = no change needed).
+    """
+    from sqlalchemy import select
+    from .models import FaqChunk
+
+    embedder = get_embedder()
+    sample = db.scalar(select(FaqChunk).limit(1))
+    if sample is None:
+        return 0
+    if len(sample.embedding or []) == embedder.dim:
+        return 0
+    docs = db.scalars(select(FaqDoc).where(FaqDoc.status != "archived")).all()
+    for doc in docs:
+        reembed_doc(db, doc)
+    db.commit()
+    return len(docs)

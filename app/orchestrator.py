@@ -23,14 +23,19 @@ from .retrieval import RetrievedChunk, search
 class AgentResult:
     reply: str
     intent: str
-    route: str  # smalltalk | faq_grounded | refused | escalated
+    route: str  # smalltalk | faq_grounded | refused | escalated | image_analysis
     model: str
     confidence: float | None = None
     latency_ms: int = 0
-    citations: list[tuple[str, float]] = field(default_factory=list)  # (faq_chunk_id, score)
+    citations: list[tuple[str, float]] = field(default_factory=list)
 
 
-def handle(db: Session, text: str) -> AgentResult:
+def handle(
+    db: Session,
+    text: str,
+    history: list[dict] | None = None,
+    image_b64: str | None = None,
+) -> AgentResult:
     start = time.perf_counter()
     llm = get_llm()
 
@@ -38,6 +43,12 @@ def handle(db: Session, text: str) -> AgentResult:
         kwargs.setdefault("model", llm.name)
         kwargs["latency_ms"] = int((time.perf_counter() - start) * 1000)
         return AgentResult(**kwargs)
+
+    # Image analysis — bypass text guardrails, send directly to vision model
+    if image_b64:
+        prompt = text or "วิเคราะห์รูปภาพนี้และบอกว่าพืชมีปัญหาอะไร มีโรค แมลง หรือความผิดปกติหรือไม่"
+        reply = llm.generate(prompt, context_chunks=None, history=history, image_b64=image_b64)
+        return finish(reply=reply, intent="image", route="image_analysis")
 
     # 1) Safety gate — high-risk topics are never answered generatively.
     if guardrails.is_high_risk(text):
@@ -52,7 +63,7 @@ def handle(db: Session, text: str) -> AgentResult:
     # 2) General chat — guardrailed LLM, no grounding required.
     if intent == "smalltalk":
         return finish(
-            reply=llm.generate(text, context_chunks=None),
+            reply=llm.generate(text, context_chunks=None, history=history),
             intent=intent,
             route="smalltalk",
         )
@@ -70,7 +81,7 @@ def handle(db: Session, text: str) -> AgentResult:
         )
 
     context = [h.chunk.text for h in hits]
-    answer = llm.generate(text, context_chunks=context)
+    answer = llm.generate(text, context_chunks=context, history=history)
     citations = [(h.chunk.id, round(h.score, 4)) for h in hits]
     top_score = hits[0].score
 

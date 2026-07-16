@@ -10,6 +10,7 @@ from .models import Citation, Consent, Farmer, Message, Session
 from .orchestrator import AgentResult
 
 SESSION_IDLE_SECONDS = 30 * 60
+HISTORY_TURNS = 3  # number of past user/agent exchanges to pass to the LLM
 
 
 def get_or_create_farmer(db: DbSession, line_user_id: str) -> Farmer:
@@ -85,3 +86,21 @@ def log_outbound(db: DbSession, session: Session, result: AgentResult) -> Messag
     for chunk_id, score in result.citations:
         db.add(Citation(message_id=msg.id, faq_chunk_id=chunk_id, score=score))
     return msg
+
+
+def get_recent_history(db: DbSession, session: Session) -> list[dict]:
+    """Return the last HISTORY_TURNS user+agent message pairs for conversation context."""
+    messages = (
+        db.scalars(
+            select(Message)
+            .where(Message.session_id == session.id)
+            .order_by(Message.created_at.desc())
+            .limit(HISTORY_TURNS * 2)
+        ).all()
+    )
+    # Reverse to chronological order, exclude the just-logged inbound (last item)
+    history = []
+    for m in reversed(list(messages)[1:]):  # skip the most recent (current question)
+        if m.role in ("user", "agent") and m.content:
+            history.append({"role": "user" if m.role == "user" else "assistant", "content": m.content})
+    return history

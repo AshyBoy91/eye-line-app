@@ -13,11 +13,18 @@ from .. import conversation, line_client
 from ..daily_briefing import build_daily_briefing, needs_daily_briefing, mark_briefing_sent
 from ..database import get_db
 from ..orchestrator import AgentResult, handle
+from ..conversation import get_recent_history
 
 router = APIRouter(tags=["webhook"])
 
 
-def _process(db: DbSession, line_user_id: str, text: str, line_message_id: str | None) -> tuple[AgentResult | None, str]:
+def _process(
+    db: DbSession,
+    line_user_id: str,
+    text: str,
+    line_message_id: str | None,
+    image_b64: str | None = None,
+) -> tuple[AgentResult | None, str]:
     """Run the full inbound pipeline.
 
     Returns (result, briefing) where result is None on duplicate and
@@ -34,9 +41,10 @@ def _process(db: DbSession, line_user_id: str, text: str, line_message_id: str |
         mark_briefing_sent(db, farmer)
 
     session = conversation.get_active_session(db, farmer)
-    conversation.log_inbound(db, session, text, line_message_id)
+    conversation.log_inbound(db, session, text or "[image]", line_message_id)
 
-    result = handle(db, text)
+    history = get_recent_history(db, session)
+    result = handle(db, text or "", history=history, image_b64=image_b64)
 
     conversation.log_outbound(db, session, result)
     db.commit()
@@ -59,20 +67,34 @@ async def line_webhook(
         if event.get("type") != "message":
             continue
         message = event.get("message", {})
-        if message.get("type") != "text":
+        msg_type = message.get("type")
+        if msg_type not in ("text", "image"):
             continue
         line_user_id = event.get("source", {}).get("userId", "unknown")
-        text = message.get("text", "")
         line_message_id = message.get("id")
         reply_token = event.get("replyToken", "")
 
-        result, briefing = _process(db, line_user_id, text, line_message_id)
-        if result is not None:
-            # Send briefing as first bubble, answer as second (LINE supports up to 5).
+        text = ""
+        image_b64 = None
+
+        if msg_type == "text":
+            text = message.get("text", "")
+        elif msg_type == "image":
+            # Send an immediate acknowledgement so the farmer knows we're working on it
+            line_client.reply(reply_token, line_client.IMAGE_INTRO_TH)
+            image_b64 = line_client.get_image_b64(line_message_id)
+            reply_token = ""  # reply token already used; image result sent via push if needed
+
+        result, briefing = _process(db, line_user_id, text, line_message_id, image_b64)
+        if result is not None and reply_token:
             if briefing:
                 line_client.reply(reply_token, briefing, result.reply)
             else:
                 line_client.reply(reply_token, result.reply)
+            handled += 1
+        elif result is not None and image_b64:
+            # Image: acknowledgement already sent; result logged. In production
+            # use LINE Push API to send the analysis result asynchronously.
             handled += 1
 
     return {"status": "ok", "handled": handled}

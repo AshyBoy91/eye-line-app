@@ -17,7 +17,7 @@ from .config import settings
 from .database import SessionLocal, init_db
 from .routers import admin, webhook
 from .routers.admin import AdminAuthRequired
-from .seed import seed_if_empty
+from .seed import seed_if_empty, reembed_all_if_dim_changed
 
 
 @asynccontextmanager
@@ -25,6 +25,10 @@ async def lifespan(app: FastAPI):
     init_db()
     with SessionLocal() as db:
         seed_if_empty(db)
+        n = reembed_all_if_dim_changed(db)
+        if n:
+            import sys
+            print(f"[startup] Re-embedded {n} FAQ docs (embedder dimension changed)", file=sys.stderr)
     yield
 
 
