@@ -28,7 +28,23 @@ def get_db() -> Iterator[Session]:
 
 
 def init_db() -> None:
-    """Create all tables. Import models so they register on the metadata."""
+    """Create all tables and run lightweight column migrations."""
     from . import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _migrate()
+
+
+def _migrate() -> None:
+    """Add columns introduced after initial schema without Alembic."""
+    from sqlalchemy import text
+
+    with engine.connect() as conn:
+        for stmt in [
+            "ALTER TABLE farmer ADD COLUMN last_briefing_date DATE",
+        ]:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+            except Exception:
+                pass  # column already exists

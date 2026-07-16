@@ -84,5 +84,10 @@ class Settings:
     admin_token: str = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
     admin_password: str = os.environ.get("ADMIN_PASSWORD", "6969")
 
+    # Daily briefing — weather via OpenWeatherMap (free tier, 1000 calls/day).
+    # Leave blank to skip weather in the briefing.
+    openweather_api_key: str = os.environ.get("OPENWEATHER_API_KEY", "")
+    openweather_city: str = os.environ.get("OPENWEATHER_CITY", "Chiang Mai,TH")
+
 
 settings = Settings()

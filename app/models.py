@@ -8,11 +8,12 @@ to a native pgvector column.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     JSON,
     Boolean,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -43,6 +44,7 @@ class Farmer(Base):
     preferred_lang: Mapped[str] = mapped_column(String(8), default="th")
     status: Mapped[str] = mapped_column(String(16), default="active")  # active|blocked|deleted
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    last_briefing_date: Mapped["date | None"] = mapped_column(Date, nullable=True)
 
     sessions: Mapped[list["Session"]] = relationship(back_populates="farmer")
     consents: Mapped[list["Consent"]] = relationship(back_populates="farmer")

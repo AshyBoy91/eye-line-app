@@ -29,9 +29,16 @@ def verify_signature(body: bytes, signature: str | None) -> bool:
     return hmac.compare_digest(expected, signature)
 
 
-def reply(reply_token: str, text: str) -> None:
-    """Send a reply via the LINE Reply API. No-op if not configured."""
+def reply(reply_token: str, *texts: str) -> None:
+    """Send one or more messages via the LINE Reply API. No-op if not configured.
+
+    Pass multiple positional text arguments to send them as separate chat bubbles
+    (LINE allows up to 5 messages per reply). Each text is truncated to 4900 chars.
+    """
     if not settings.line_channel_access_token or not reply_token:
+        return
+    messages = [{"type": "text", "text": t[:4900]} for t in texts if t]
+    if not messages:
         return
     httpx.post(
         LINE_REPLY_URL,
@@ -39,6 +46,6 @@ def reply(reply_token: str, text: str) -> None:
             "Authorization": f"Bearer {settings.line_channel_access_token}",
             "Content-Type": "application/json",
         },
-        json={"replyToken": reply_token, "messages": [{"type": "text", "text": text[:4900]}]},
+        json={"replyToken": reply_token, "messages": messages},
         timeout=15,
     )
