@@ -12,6 +12,7 @@ import tempfile
 _tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_tmp.name}")
 os.environ.setdefault("ADMIN_TOKEN", "test-token")
+os.environ.setdefault("ADMIN_PASSWORD", "6969")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -54,8 +55,17 @@ def main() -> None:
         ).json()
         print("unknown_domain ->", r["route"], "conf=", r["confidence"])
 
-        # 5) Admin requires token.
-        assert client.get("/admin/conversations").status_code == 401
+        # 5) Admin is gated: unauthenticated browsers are redirected to the login page.
+        r = client.get("/admin/conversations", follow_redirects=False)
+        assert r.status_code == 303 and r.headers["location"] == "/admin/login", r
+        # Wrong password bounces back to the login page with an error flag.
+        r = client.post("/admin/login", data={"password": "nope"}, follow_redirects=False)
+        assert r.status_code == 303 and r.headers["location"] == "/admin/login?error=1", r
+        # Correct password sets a session cookie and grants access.
+        r = client.post("/admin/login", data={"password": "6969"}, follow_redirects=False)
+        assert r.status_code == 303 and r.headers["location"] == "/admin/conversations", r
+        assert client.get("/admin/conversations").status_code == 200
+        # Token fallback still works for API clients.
         assert client.get("/admin/conversations?token=test-token").status_code == 200
 
         # 6) Admin API returns logged messages.

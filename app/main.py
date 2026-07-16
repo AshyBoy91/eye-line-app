@@ -13,6 +13,7 @@ from fastapi.responses import RedirectResponse
 from .config import settings
 from .database import SessionLocal, init_db
 from .routers import admin, webhook
+from .routers.admin import AdminAuthRequired
 from .seed import seed_if_empty
 
 
@@ -27,6 +28,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Thai Farmer LINE LLM Agent", version="0.1.0", lifespan=lifespan)
 app.include_router(webhook.router)
 app.include_router(admin.router)
+
+
+@app.exception_handler(AdminAuthRequired)
+async def _admin_auth_redirect(request, exc):
+    # Unauthenticated browser access to a protected admin page → login screen.
+    return RedirectResponse(url="/admin/login", status_code=303)
 
 
 @app.get("/health")

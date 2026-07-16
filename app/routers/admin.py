@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Form, Header, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -23,15 +23,56 @@ from ..seed import reembed_doc
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 
+ADMIN_COOKIE = "admin_session"
+
+
+class AdminAuthRequired(Exception):
+    """Raised when a browser hits a protected admin page without a valid session.
+
+    An app-level handler turns this into a redirect to the login page.
+    """
+
 
 def require_admin(
+    request: Request,
     token: str | None = Query(default=None),
     x_admin_token: str | None = Header(default=None),
 ) -> str:
-    provided = token or x_admin_token
+    # Cookie session (password login) is the primary path; the token query/header
+    # is kept as a fallback for API clients (e.g. X-Admin-Token on /admin/api/*).
+    cookie = request.cookies.get(ADMIN_COOKIE)
+    provided = cookie or token or x_admin_token
     if not provided or provided != settings.admin_token:
-        raise HTTPException(status_code=401, detail="Admin token required")
+        raise AdminAuthRequired()
     return "admin"
+
+
+@router.get("/login", response_class=HTMLResponse)
+def login_form(request: Request, error: int = Query(default=0)) -> HTMLResponse:
+    return templates.TemplateResponse(request, "admin_login.html", {"error": error})
+
+
+@router.post("/login")
+def login_submit(password: str = Form(...)) -> RedirectResponse:
+    if password != settings.admin_password:
+        return RedirectResponse(url="/admin/login?error=1", status_code=303)
+    resp = RedirectResponse(url="/admin/conversations", status_code=303)
+    resp.set_cookie(
+        ADMIN_COOKIE,
+        settings.admin_token,
+        httponly=True,
+        samesite="lax",
+        secure=settings.app_env == "production",
+        max_age=60 * 60 * 8,
+    )
+    return resp
+
+
+@router.get("/logout")
+def logout() -> RedirectResponse:
+    resp = RedirectResponse(url="/admin/login", status_code=303)
+    resp.delete_cookie(ADMIN_COOKIE)
+    return resp
 
 
 def _audit(db: DbSession, action: str, target_type: str | None = None, target_id: str | None = None) -> None:

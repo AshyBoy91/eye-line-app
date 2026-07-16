@@ -82,6 +82,7 @@ class Settings:
     retrieval_min_score: float = _get_float("RETRIEVAL_MIN_SCORE", 0.18)
 
     admin_token: str = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
+    admin_password: str = os.environ.get("ADMIN_PASSWORD", "6969")
 
 
 settings = Settings()

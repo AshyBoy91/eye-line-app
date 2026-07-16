@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Thai Farmer LINE Agent — Intro</title>
+<style>
+  :root { --teal:#2a9d8f; --deep:#0f4c5c; --sand:#e9c46a; --coral:#e76f51; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", Arial, "Noto Sans Thai", sans-serif;
+    background: radial-gradient(1200px 800px at 70% 20%, #12626f 0%, #0b3a45 60%, #082a32 100%);
+    color: #f2f6f7; overflow: hidden;
+  }
+  .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .slide {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 6vw;
+    opacity: 0; transform: translateY(24px) scale(.98);
+    transition: opacity .7s ease, transform .7s ease; pointer-events: none;
+  }
+  .slide.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  h1 { font-size: clamp(32px, 6vw, 76px); line-height: 1.05; color: #fff; letter-spacing: -1px; }
+  h2 { font-size: clamp(26px, 4.4vw, 52px); color: #fff; margin-bottom: 18px; }
+  p { font-size: clamp(16px, 2.4vw, 26px); color: #cfe6e3; max-width: 900px; margin-top: 10px; }
+  .kicker { color: var(--sand); font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+            font-size: clamp(12px, 1.6vw, 16px); margin-bottom: 18px; }
+  .thai { font-size: clamp(20px, 3vw, 34px); color:#fff; }
+  .chip { display:inline-block; background: rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25);
+          border-radius: 999px; padding: 8px 18px; margin: 6px; font-size: clamp(14px,1.9vw,20px); }
+  .rules { display:flex; flex-direction:column; gap:14px; margin-top:24px; }
+  .rule { display:flex; align-items:center; gap:14px; background: rgba(255,255,255,.07);
+          border-radius: 14px; padding: 14px 22px; font-size: clamp(15px,2vw,22px); }
+  .rule .dot { width:14px; height:14px; border-radius:50%; flex:0 0 auto; }
+  .demo { background:#0a2027; border:1px solid rgba(255,255,255,.12); border-radius:14px;
+          padding: 22px 26px; text-align:left; font-family: Consolas, monospace; max-width: 860px;
+          width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .demo .cmd { color:#7fd7c9; font-size: clamp(13px,1.7vw,18px); word-break: break-all; }
+  .demo .out { color:#f2f6f7; margin-top:14px; font-size: clamp(14px,1.9vw,20px); }
+  .demo .cite { color: var(--sand); margin-top:10px; font-size: clamp(12px,1.5vw,16px); }
+  .tech { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:22px; }
+  .url { margin-top:26px; color: var(--sand); font-size: clamp(16px,2.2vw,24px); }
+  .progress { position: fixed; bottom: 0; left: 0; height: 5px; background: var(--teal); width: 0; }
+  .hint { position: fixed; bottom: 16px; right: 20px; font-size: 13px; color: rgba(255,255,255,.45); }
+  .logo { position: fixed; top: 22px; left: 26px; font-weight: 700; color: rgba(255,255,255,.75);
+          letter-spacing: 1px; font-size: 15px; }
+</style>
+</head>
+<body>
+  <div class="logo">🌾 Thai Farmer LINE Agent</div>
+  <div class="stage">
+    <!-- 1 Hook -->
+    <section class="slide">
+      <div class="kicker">AI for Thai Farmers</div>
+      <h1>Safe farming answers,<br/>right inside LINE.</h1>
+      <p>An AI assistant farmers chat with on the app they already use every day — built to be trustworthy, not just clever.</p>
+    </section>
+
+    <!-- 2 Problem -->
+    <section class="slide">
+      <div class="kicker">The Problem</div>
+      <h2>Wrong advice ruins a harvest.</h2>
+      <p>General chatbots hallucinate. For pesticide doses, plant disease and soil care, a made-up answer has real cost. So every agriculture answer is grounded in an expert-reviewed knowledge base.</p>
+    </section>
+
+    <!-- 3 Demo -->
+    <section class="slide">
+      <div class="kicker">Live Demo</div>
+      <h2>Grounded &amp; cited — in Thai</h2>
+      <div class="demo">
+        <div class="cmd">POST /webhook/simulate&nbsp;&nbsp;{ "text": "ข้าวใบเหลืองควรทำอย่างไร" }</div>
+        <div class="out thai">→ ตอบจากคลังความรู้ที่ผ่านการตรวจสอบ พร้อมคำแนะนำการดูแลข้าว…</div>
+        <div class="cite">📎 Source: curated FAQ · Rice Dept (published, in-date)</div>
+      </div>
+      <p>No verified source? No answer. The model never invents facts.</p>
+    </section>
+
+    <!-- 4 Guardrails -->
+    <section class="slide">
+      <div class="kicker">Guardrails</div>
+      <h2>Safety the model can't override</h2>
+      <div class="rules">
+        <div class="rule"><span class="dot" style="background:var(--coral)"></span> High-risk topics (dosage, medical, legal) → refused &amp; escalated</div>
+        <div class="rule"><span class="dot" style="background:var(--teal)"></span> Domain answers → grounded &amp; cited, or refused</div>
+        <div class="rule"><span class="dot" style="background:var(--sand)"></span> Only published, in-date knowledge is retrievable</div>
+      </div>
+    </section>
+
+    <!-- 5 Admin -->
+    <section class="slide">
+      <div class="kicker">Admin Portal</div>
+      <h2>Every conversation, reviewed</h2>
+      <p>Password sign-in for admins to review chats, manage the knowledge base, and keep a full audit trail — aligned with Thailand's PDPA privacy law.</p>
+      <div class="tech">
+        <span class="chip">Conversations</span>
+        <span class="chip">FAQ manager</span>
+        <span class="chip">Audit log</span>
+      </div>
+    </section>
+
+    <!-- 6 Close -->
+    <section class="slide">
+      <div class="kicker">Live Now</div>
+      <h1>Safe. Grounded.<br/>Ready to help.</h1>
+      <div class="tech">
+        <span class="chip">Powered by Claude</span>
+        <span class="chip">FastAPI</span>
+        <span class="chip">Deployed on Render</span>
+      </div>
+      <div class="url">thai-farmer-agent.onrender.com</div>
+    </section>
+  </div>
+
+  <div class="progress" id="progress"></div>
+  <div class="hint">Space/→ next · ←/back · click to advance</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const durations = [7000, 8000, 9000, 9000, 8000, 7000]; // ms per slide (~48s total)
+  const progress = document.getElementById('progress');
+  let i = 0, timer = null, start = 0, raf = null;
+
+  function show(n) {
+    slides[i].classList.remove('active');
+    i = (n + slides.length) % slides.length;
+    slides[i].classList.add('active');
+    restart();
+  }
+  function tickProgress() {
+    const elapsed = performance.now() - start;
+    const pct = Math.min(1, elapsed / durations[i]);
+    progress.style.width = (pct * 100) + '%';
+    if (pct < 1) raf = requestAnimationFrame(tickProgress);
+  }
+  function restart() {
+    clearTimeout(timer); cancelAnimationFrame(raf);
+    start = performance.now(); progress.style.width = '0%';
+    raf = requestAnimationFrame(tickProgress);
+    timer = setTimeout(() => show(i + 1), durations[i]);
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(i + 1); }
+    else if (e.key === 'ArrowLeft') show(i - 1);
+    else if (e.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.();
+  });
+  document.addEventListener('click', () => show(i + 1));
+  slides[0].classList.add('active');
+  restart();
+</script>
+</body>
+</html>
