@@ -7,8 +7,11 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 from .config import settings
 from .database import SessionLocal, init_db
@@ -25,9 +28,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Thai Farmer LINE LLM Agent", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Thai Farmer LINE LLM Agent", version="0.1.0", lifespan=lifespan, docs_url="/docs")
 app.include_router(webhook.router)
 app.include_router(admin.router)
+
+_templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent / "templates"))
 
 
 @app.exception_handler(AdminAuthRequired)
@@ -46,6 +51,6 @@ def health() -> dict:
     }
 
 
-@app.get("/")
-def root() -> RedirectResponse:
-    return RedirectResponse(url="/docs")
+@app.get("/", response_class=HTMLResponse)
+def landing(request: Request) -> HTMLResponse:
+    return _templates.TemplateResponse(request, "landing.html", {})

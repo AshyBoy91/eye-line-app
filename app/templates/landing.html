@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ผู้ช่วยเกษตรกรไทย · Thai Farmer Assistant</title>
+  <style>
+    :root{--teal:#2a9d8f;--deep:#0f4c5c;--sand:#e9c46a;--coral:#e76f51;--light:#f2f6f7;--text:#1b2733;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:"Segoe UI",Arial,"Noto Sans Thai",sans-serif;color:var(--text);background:#fff;}
+
+    /* ── HERO ── */
+    .hero{background:radial-gradient(1200px 700px at 60% 30%,#12626f 0%,#0b3a45 55%,#082a32 100%);
+          color:#fff;padding:80px 5vw 70px;display:flex;flex-wrap:wrap;gap:48px;align-items:center;}
+    .hero-text{flex:1 1 380px;}
+    .hero-tag{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+              border-radius:999px;padding:6px 18px;font-size:13px;letter-spacing:2px;text-transform:uppercase;
+              color:var(--sand);margin-bottom:22px;}
+    .hero h1{font-size:clamp(32px,5vw,58px);line-height:1.1;font-weight:800;}
+    .hero h1 span{display:block;color:#bfe3dd;font-size:clamp(20px,3vw,34px);font-weight:600;margin-top:10px;}
+    .hero p{margin-top:18px;font-size:clamp(16px,2vw,20px);color:#cfe6e3;max-width:560px;line-height:1.6;}
+    .hero-btns{margin-top:32px;display:flex;gap:14px;flex-wrap:wrap;}
+    .btn{display:inline-block;padding:13px 28px;border-radius:10px;font-size:16px;font-weight:700;
+         text-decoration:none;transition:opacity .2s;}
+    .btn-primary{background:var(--teal);color:#fff;}
+    .btn-secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);}
+    .btn:hover{opacity:.85;}
+    .hero-badge{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:12px;}
+    .badge-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:20px;
+               padding:28px 32px;text-align:center;}
+    .badge-icon{font-size:56px;}
+    .badge-box strong{display:block;color:#fff;font-size:17px;margin-top:10px;}
+    .badge-box span{display:block;color:#bfe3dd;font-size:14px;margin-top:4px;}
+
+    /* ── SECTIONS ── */
+    section{padding:72px 5vw;}
+    section:nth-child(even){background:var(--light);}
+    h2{font-size:clamp(26px,4vw,40px);color:var(--deep);margin-bottom:8px;}
+    h2 .th{display:block;color:var(--teal);font-size:clamp(18px,2.6vw,28px);margin-top:4px;font-weight:600;}
+    .sub{color:#6b7b86;font-size:16px;margin-bottom:40px;}
+
+    /* ── HOW IT WORKS ── */
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:28px;}
+    .step{background:#fff;border:1px solid #d5dee2;border-radius:16px;padding:28px;position:relative;}
+    .step-num{width:38px;height:38px;background:var(--teal);color:#fff;border-radius:50%;
+              display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;margin-bottom:14px;}
+    .step h3{color:var(--deep);font-size:18px;margin-bottom:6px;}
+    .step .th{color:#6b7b86;font-size:14px;margin-top:4px;}
+    .step p{font-size:15px;color:#41525c;line-height:1.5;}
+
+    /* ── FEATURES ── */
+    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}
+    .feature{display:flex;gap:16px;align-items:flex-start;}
+    .feat-icon{font-size:30px;flex:0 0 auto;margin-top:2px;}
+    .feature h3{font-size:17px;color:var(--deep);margin-bottom:4px;}
+    .feature .th{color:var(--teal);font-size:13px;font-weight:600;}
+    .feature p{font-size:14px;color:#41525c;line-height:1.5;margin-top:6px;}
+
+    /* ── GUARDRAILS ── */
+    .rules{display:flex;flex-direction:column;gap:14px;max-width:760px;}
+    .rule{display:flex;align-items:flex-start;gap:14px;background:#fff;border-radius:14px;
+          border:1px solid #d5dee2;padding:16px 20px;}
+    .dot{width:14px;height:14px;border-radius:50%;flex:0 0 auto;margin-top:3px;}
+    .rule-text strong{font-size:16px;color:var(--deep);}
+    .rule-text .th{font-size:13px;color:#6b7b86;margin-top:2px;}
+    .rule-text p{font-size:14px;color:#41525c;margin-top:6px;line-height:1.5;}
+
+    /* ── CREATORS ── */
+    .creators-grid{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;}
+    .creator-card{background:#fff;border:1px solid #d5dee2;border-radius:20px;padding:36px 32px;
+                  text-align:center;flex:1 1 280px;max-width:340px;box-shadow:0 6px 20px rgba(15,76,92,.06);}
+    .creator-avatar{width:80px;height:80px;border-radius:50%;background:var(--deep);color:#fff;
+                    font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+    .creator-card h3{font-size:22px;color:var(--deep);font-weight:800;}
+    .creator-card .th{color:var(--teal);font-size:15px;font-weight:600;margin-top:2px;}
+    .creator-card .role{color:#6b7b86;font-size:14px;margin-top:10px;line-height:1.5;}
+    .creator-aff{margin-top:16px;background:var(--light);border-radius:10px;padding:10px 14px;
+                 font-size:13px;color:var(--deep);font-weight:600;}
+
+    /* ── LINE CTA ── */
+    .cta{background:radial-gradient(900px 500px at 50% 50%,#12626f,#082a32);color:#fff;text-align:center;padding:80px 5vw;}
+    .cta h2{color:#fff;}
+    .cta h2 .th{color:#bfe3dd;}
+    .cta p{color:#cfe6e3;font-size:17px;margin:14px auto 32px;max-width:560px;line-height:1.6;}
+    .line-id{display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
+             border-radius:12px;padding:14px 28px;font-size:18px;font-weight:700;color:var(--sand);
+             letter-spacing:1px;margin-bottom:10px;}
+    .cta-note{color:#bfe3dd;font-size:14px;}
+
+    /* ── FOOTER ── */
+    footer{background:#082a32;color:#7fb8b2;text-align:center;padding:28px 5vw;font-size:14px;}
+    footer a{color:var(--teal);text-decoration:none;}
+
+    /* ── CHIPS ── */
+    .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+    .chip{background:var(--light);border:1px solid #d5dee2;border-radius:999px;
+          padding:5px 16px;font-size:13px;color:var(--deep);}
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-text">
+    <div class="hero-tag">🌾 AI for Thai Farmers · เอไอเพื่อเกษตรกรไทย</div>
+    <h1>Thai Farmer Assistant
+      <span>ผู้ช่วยเกษตรกรไทย</span>
+    </h1>
+    <p>Ask agriculture questions on LINE and get trusted, expert-grounded answers in Thai — so farmers get reliable advice instead of following false information.
+      <br/><br/>ถามคำถามการเกษตรผ่าน LINE รับคำตอบที่เชื่อถือได้เป็นภาษาไทย
+      ไม่ต้องเชื่อคำแนะนำที่ผิดอีกต่อไป</p>
+    <div class="hero-btns">
+      <a href="/admin" class="btn btn-primary">Admin Portal · ผู้ดูแลระบบ</a>
+      <a href="/docs" class="btn btn-secondary">API Docs</a>
+    </div>
+  </div>
+  <div class="hero-badge">
+    <div class="badge-box">
+      <div class="badge-icon">🤖</div>
+      <strong>Powered by Claude</strong>
+      <span>Anthropic AI · FastAPI</span>
+    </div>
+    <div class="badge-box">
+      <div class="badge-icon">🇹🇭</div>
+      <strong>Deployed on Render</strong>
+      <span>Singapore · PostgreSQL</span>
+    </div>
+  </div>
+</header>
+
+<!-- HOW IT WORKS -->
+<section>
+  <h2>How it works <span class="th">วิธีการทำงาน</span></h2>
+  <p class="sub">Three steps from question to trusted answer · สามขั้นตอนจากคำถามสู่คำตอบที่เชื่อถือได้</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Farmer asks on LINE</h3>
+      <p class="th">เกษตรกรถามผ่าน LINE</p>
+      <p>The farmer sends a Thai text message to the bot's LINE account — no app to install, uses what they already have.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>AI checks & retrieves</h3>
+      <p class="th">AI ตรวจสอบและค้นหาข้อมูล</p>
+      <p>The system checks for high-risk topics, classifies intent, then searches a curated knowledge base for relevant, published answers.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Grounded reply with citation</h3>
+      <p class="th">ตอบกลับพร้อมอ้างอิงแหล่งข้อมูล</p>
+      <p>Claude generates a Thai answer grounded only in verified sources. The source is cited so the farmer knows where to verify.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <h2>Features <span class="th">คุณสมบัติ</span></h2>
+  <p class="sub">Built for accuracy, safety, and trust · สร้างขึ้นเพื่อความถูกต้อง ปลอดภัย และน่าเชื่อถือ</p>
+  <div class="features">
+    <div class="feature">
+      <span class="feat-icon">🛡️</span>
+      <div>
+        <h3>Hard guardrails</h3>
+        <div class="th">ระบบป้องกันที่แน่นหนา</div>
+        <p>High-risk topics (pesticide doses, medical, legal) are always refused and escalated to a human expert. The policy runs independently of the AI.</p>
+      </div>
+    </div>
+    <div class="feature">
+      <span class="feat-icon">📚</span>
+      <div>
+        <h3>RAG knowledge base</h3>
+        <div class="th">คลังความรู้ที่ตรวจสอบแล้ว</div>
+        <p>Every agriculture answer comes from a curated, expert-reviewed FAQ. No source above the confidence threshold = no answer, never a guess.</p>
+      </div>
+    </div>
+    <div class="feature">
+      <span class="feat-icon">📎</span>
+      <div>
+        <h3>Source citations</h3>
+        <div class="th">อ้างอิงแหล่งที่มาทุกคำตอบ</div>
+        <p>Each grounded answer appends the source (e.g. Rice Department, DOA) so farmers and admins can verify the information.</p>
+      </div>
+    </div>
+    <div class="feature">
+      <span class="feat-icon">🔍</span>
+      <div>
+        <h3>Admin review portal</h3>
+        <div class="th">พอร์ทัลตรวจสอบสำหรับผู้ดูแล</div>
+        <p>Experts sign in to review every conversation, curate the knowledge base, and maintain a full audit trail for PDPA compliance.</p>
+      </div>
+    </div>
+    <div class="feature">
+      <span class="feat-icon">💬</span>
+      <div>
+        <h3>Native LINE interface</h3>
+        <div class="th">ใช้งานผ่าน LINE ได้เลย</div>
+        <p>Farmers chat on LINE — no new app. Webhook signature verification and message deduplication prevent spoofing and replay attacks.</p>
+      </div>
+    </div>
+    <div class="feature">
+      <span class="feat-icon">🔒</span>
+      <div>
+        <h3>PDPA-aligned privacy</h3>
+        <div class="th">สอดคล้องกับ พ.ร.บ. PDPA</div>
+        <p>Pseudonymous IDs only. Purpose-based consent, audit events on every admin view, and erasure cascade on deletion.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GUARDRAILS -->
+<section>
+  <h2>Safety rules <span class="th">กฎความปลอดภัย</span></h2>
+  <p class="sub">Enforced in code, independent of the AI model · บังคับใช้ในโค้ด ไม่ขึ้นอยู่กับโมเดล AI</p>
+  <div class="rules">
+    <div class="rule">
+      <div class="dot" style="background:var(--coral)"></div>
+      <div class="rule-text">
+        <strong>High-risk topics → refused &amp; escalated</strong>
+        <div class="th">คำถามความเสี่ยงสูง → ปฏิเสธและส่งต่อผู้เชี่ยวชาญ</div>
+        <p>Pesticide dosage, medical, legal, and financial questions are never generated. A safe template is returned and the case is escalated.</p>
+      </div>
+    </div>
+    <div class="rule">
+      <div class="dot" style="background:var(--teal)"></div>
+      <div class="rule-text">
+        <strong>Domain answers → grounded &amp; cited, or refused</strong>
+        <div class="th">คำตอบการเกษตร → อ้างอิงได้ หรือปฏิเสธ</div>
+        <p>Agriculture answers must have at least one citation above the confidence threshold. Below threshold = refusal, never a hallucination.</p>
+      </div>
+    </div>
+    <div class="rule">
+      <div class="dot" style="background:var(--sand)"></div>
+      <div class="rule-text">
+        <strong>Only published, in-date knowledge is used</strong>
+        <div class="th">ใช้เฉพาะข้อมูลที่เผยแพร่และยังไม่หมดอายุ</div>
+        <p>Only FAQ entries with <code>status=published</code> and within their <code>valid_from/valid_to</code> window are retrievable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CREATORS -->
+<section>
+  <h2>Created by <span class="th">ทีมผู้พัฒนา</span></h2>
+  <p class="sub">Department of Agriculture, Chiang Mai University · ภาควิชาเกษตรศาสตร์ มหาวิทยาลัยเชียงใหม่</p>
+  <div class="creators-grid">
+    <div class="creator-card">
+      <div class="creator-avatar">A</div>
+      <h3>Dr. Eye</h3>
+      <div class="th">ดร.อาย</div>
+      <div class="role">PhD Graduate<br/>Department of Agriculture</div>
+      <div class="creator-aff">Chiang Mai University<br/>มหาวิทยาลัยเชียงใหม่</div>
+    </div>
+    <div class="creator-card">
+      <div class="creator-avatar">P</div>
+      <h3>Dr. Ploy</h3>
+      <div class="th">ดร.พลอย</div>
+      <div class="role">PhD Graduate<br/>Department of Agriculture</div>
+      <div class="creator-aff">Chiang Mai University<br/>มหาวิทยาลัยเชียงใหม่</div>
+    </div>
+  </div>
+  <div class="chips" style="margin-top:32px;justify-content:center;">
+    <span class="chip">🌾 Agriculture Technology</span>
+    <span class="chip">🤖 LLM + RAG</span>
+    <span class="chip">📱 LINE Messaging API</span>
+    <span class="chip">🔒 PDPA Compliant</span>
+    <span class="chip">🇹🇭 Thai Language AI</span>
+  </div>
+</section>
+
+<!-- LINE CTA -->
+<section class="cta">
+  <h2>Try it now on LINE
+    <span class="th">ลองใช้งานผ่าน LINE ได้เลย</span>
+  </h2>
+  <p>Add the bot as a friend on LINE and ask any agriculture question in Thai. Farmers across Thailand can use this for free — no new app needed.
+    <br/>เพิ่มบอทเป็นเพื่อนใน LINE แล้วถามคำถามด้านการเกษตรเป็นภาษาไทยได้เลย</p>
+  <div class="line-id">@643txfqa</div>
+  <div class="cta-note">Search for the LINE ID above, or scan the QR code from the LINE Developers console · ค้นหา LINE ID หรือสแกน QR code</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Thai Farmer LINE Agent · Built by Dr. Eye &amp; Dr. Ploy, Chiang Mai University</p>
+  <p style="margin-top:8px;">
+    <a href="/admin">Admin Portal</a> &nbsp;·&nbsp;
+    <a href="/docs">API Docs</a> &nbsp;·&nbsp;
+    <a href="https://github.com/AshyBoy91/eye-line-app" target="_blank">GitHub</a>
+  </p>
+  <p style="margin-top:10px;font-size:12px;color:#4a8a83;">
+    Sample FAQ content is illustrative. Production content must be authored by domain experts (DOA / Rice Department).
+  </p>
+</footer>
+
+</body>
+</html>

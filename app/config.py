@@ -75,7 +75,7 @@ class Settings:
 
     # Anthropic Claude (Messages API — requires an API key, not a claude.ai subscription)
     anthropic_api_key: str = os.environ.get("ANTHROPIC_API_KEY", "")
-    anthropic_model: str = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+    anthropic_model: str = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-5")
     anthropic_base_url: str = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1")
 
     retrieval_top_k: int = _get_int("RETRIEVAL_TOP_K", 4)
