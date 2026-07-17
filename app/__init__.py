@@ -1,1 +1,1 @@
-"""Package marker for the Thai Farmer LINE LLM agent application."""
+"""Package marker for the ReLoop Thai Farmer AI application."""

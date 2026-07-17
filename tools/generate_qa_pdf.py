@@ -299,7 +299,7 @@ HTML = """<!DOCTYPE html>
 </head>
 <body>
 <div class="cover">
-  <h1>Thai Farmer LINE LLM Agent</h1>
+  <h1>ReLoop — Thai Farmer AI</h1>
   <div class="sub">30 Conference Q&amp;A — Bangkok Agriculture Conference 2026</div>
   <div class="meta">
     Prepared by: Dr. Toungporn Uttarotai &amp; Dr. Daranrat Jaitiang<br/>
@@ -324,7 +324,7 @@ HTML = """<!DOCTYPE html>
 {section_7}
 
 <div class="footer">
-  Thai Farmer LINE Agent · Dr. Toungporn Uttarotai &amp; Dr. Daranrat Jaitiang, Chiang Mai University · July 2026
+  ReLoop · Dr. Toungporn Uttarotai &amp; Dr. Daranrat Jaitiang, Chiang Mai University · July 2026
 </div>
 </body>
 </html>"""

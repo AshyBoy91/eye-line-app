@@ -49,7 +49,7 @@ PAPER_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 </style></head><body>
 
 <div class="title">
-  <h1>GuardedRAG: A Safety-First Conversational AI Agent<br/>for Thai Agricultural Extension via LINE Messaging</h1>
+  <h1>ReLoop: A Safety-First Conversational AI Agent<br/>for Thai Agricultural Extension via LINE Messaging</h1>
   <div class="authors">Toungporn Uttarotai &amp; Daranrat Jaitiang</div>
   <div class="affil">Faculty of Agriculture · Chiang Mai University, Thailand<br/>Dept of Highland Agriculture &amp; Natural Resources · Dept of Agricultural Economy &amp; Development</div>
   <div class="date">Presented at: National Agriculture Conference, Bangkok · July 2026</div>
@@ -58,14 +58,14 @@ PAPER_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 
 <div class="abstract">
   <strong>Abstract</strong>
-  Thailand's smallholder farmers rely heavily on peer advice disseminated through LINE messaging groups, much of which is unverified and potentially harmful. This paper presents <em>GuardedRAG</em>, a production-deployed conversational AI agent that enables Thai farmers to ask agriculture questions directly on LINE and receive grounded, cited answers from an expert-reviewed knowledge base. The system enforces hard safety guardrails independent of the underlying language model: high-risk queries (pesticide dosage, medical, legal) are unconditionally refused and escalated; domain answers must carry at least one verified citation above a confidence threshold or are refused rather than hallucinated. The agent uses Retrieval-Augmented Generation (RAG) with Anthropic Claude Sonnet 4.5 and OpenAI text-embedding-3-small, is deployed on Render (Singapore), and adds a proactive daily briefing containing Chiang Mai weather, government incentive updates, and misinformation alerts. We describe the architecture, guardrail invariants, privacy design, and an evaluation over the implemented smoke-test suite. All results confirm zero hallucination on domain queries and 100% refusal of high-risk inputs across test cases.
+  Thailand's smallholder farmers rely heavily on peer advice disseminated through LINE messaging groups, much of which is unverified and potentially harmful. This paper presents <em>ReLoop</em>, a production-deployed conversational AI agent that enables Thai farmers to ask agriculture questions directly on LINE and receive grounded, cited answers from an expert-reviewed knowledge base. The system enforces hard safety guardrails independent of the underlying language model: high-risk queries (pesticide dosage, medical, legal) are unconditionally refused and escalated; domain answers must carry at least one verified citation above a confidence threshold or are refused rather than hallucinated. The agent uses Retrieval-Augmented Generation (RAG) with Anthropic Claude Sonnet 4.5 and OpenAI text-embedding-3-small, is deployed on Render (Singapore), and adds a proactive daily briefing containing Chiang Mai weather, government incentive updates, and misinformation alerts. We describe the architecture, guardrail invariants, privacy design, and an evaluation over the implemented smoke-test suite. All results confirm zero hallucination on domain queries and 100% refusal of high-risk inputs across test cases.
   <div class="keywords"><strong>Keywords:</strong> RAG, LLM, agricultural AI, LINE bot, guardrails, Thai NLP, PDPA, conversational agent</div>
 </div>
 
 <h2>1. Introduction</h2>
 <p>Thailand has approximately 8.6 million farming households, the majority being smallholders with limited formal agricultural education. The country's dominant messaging platform, LINE (47M+ active users), has become the primary channel through which farmers exchange advice — including crop disease identification, fertiliser recommendations, and pest control techniques. A significant fraction of this advice is anecdotal, commercially motivated, or outright false, contributing to preventable crop losses and unsafe agrochemical practices.</p>
 <p>Large language models (LLMs) offer a compelling opportunity to provide accurate, accessible agricultural guidance at scale. However, general-purpose LLMs are prone to confident hallucination, and in the agricultural domain a plausible but incorrect recommendation can have direct economic or health consequences. Unguarded deployment of an LLM as a farming advisor would likely amplify, not reduce, misinformation.</p>
-<p>We present <em>GuardedRAG</em>, a system that addresses this tension through three mechanisms: (1) a hard-coded safety gate that intercepts high-risk queries before any model inference; (2) retrieval-augmented generation that grounds every agricultural answer in a curated, expert-reviewed knowledge base with mandatory source citation; and (3) a conformal-refusal policy that returns a safe template when no sufficiently confident chunk is retrieved, rather than generating a speculative answer. The result is a system where the LLM's role is strictly answer formulation, not policy-making.</p>
+<p>We present <em>ReLoop</em>, a system that addresses this tension through three mechanisms: (1) a hard-coded safety gate that intercepts high-risk queries before any model inference; (2) retrieval-augmented generation that grounds every agricultural answer in a curated, expert-reviewed knowledge base with mandatory source citation; and (3) a conformal-refusal policy that returns a safe template when no sufficiently confident chunk is retrieved, rather than generating a speculative answer. The result is a system where the LLM's role is strictly answer formulation, not policy-making.</p>
 
 <h2>2. Related Work</h2>
 <h3>2.1 Chatbots in Agriculture</h3>
@@ -78,7 +78,7 @@ PAPER_HTML = """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 <p>Thailand's Personal Data Protection Act (B.E. 2562 / 2019) imposes obligations comparable to GDPR for data minimisation, consent, and erasure. Agricultural chatbot deployments storing farmer interactions must address these obligations. We describe our privacy-by-design implementation in Section 4.5.</p>
 
 <h2>3. System Architecture</h2>
-<p>GuardedRAG is structured as a FastAPI application with four principal subsystems: a LINE webhook interface, a guardrail orchestrator, a retrieval engine, and an LLM provider abstraction.</p>
+<p>ReLoop is structured as a FastAPI application with four principal subsystems: a LINE webhook interface, a guardrail orchestrator, a retrieval engine, and an LLM provider abstraction.</p>
 <div class="fig-box">
 <pre style="font-size:9.5pt;font-family:Consolas,monospace;color:#0f4c5c;line-height:1.5">
  LINE Platform

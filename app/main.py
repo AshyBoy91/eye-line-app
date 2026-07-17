@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Thai Farmer LINE LLM Agent", version="0.1.0", lifespan=lifespan, docs_url="/docs")
+app = FastAPI(title="ReLoop — Thai Farmer AI", version="0.1.0", lifespan=lifespan, docs_url="/docs")
 app.include_router(webhook.router)
 app.include_router(admin.router)
 
