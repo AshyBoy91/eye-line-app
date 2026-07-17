@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>ReLoop — Technical Demo</title>
+<style>
+:root{--teal:#2a9d8f;--deep:#0f4c5c;--sand:#e9c46a;--coral:#e76f51;--green:#06c755;--dim:#082a32;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:1920px;height:1080px;overflow:hidden;
+  font-family:"Segoe UI",Arial,"Noto Sans Thai",monospace;}
+body{background:var(--dim);}
+#canvas{position:fixed;inset:0;z-index:0;opacity:.3;}
+.scene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;z-index:1;transition:opacity .7s;}
+.scene.active{opacity:1;pointer-events:auto;}
+.logo{position:absolute;top:32px;right:56px;font-size:20px;font-weight:800;color:#fff;z-index:10;}
+.scene-tag{position:absolute;top:32px;left:56px;font-size:13px;font-weight:700;
+  color:var(--sand);letter-spacing:3px;text-transform:uppercase;z-index:10;}
+.prog{position:fixed;bottom:0;left:0;height:4px;background:var(--teal);z-index:100;}
+.hint{position:fixed;bottom:14px;right:24px;font-size:12px;color:rgba(255,255,255,.3);}
+
+/* Particles BG glow */
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 1200px 600px at 65% 25%,rgba(18,98,111,.7) 0%,transparent 70%),
+             radial-gradient(ellipse 800px 400px at 20% 75%,rgba(15,76,92,.5) 0%,transparent 65%);}
+
+/* ══ S1 TITLE ══ */
+.t-wrap{text-align:center;z-index:2;}
+.t-wrap h1{font-size:86px;font-weight:800;color:#fff;line-height:1.05;
+  text-shadow:0 0 60px rgba(42,157,143,.4);}
+.t-wrap h1 em{color:var(--teal);font-style:normal;}
+.t-sub{font-size:24px;color:#9fc5c0;margin-top:14px;}
+.t-th{font-size:18px;color:#7fb8b2;margin-top:6px;}
+.pills{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:26px;}
+.pill{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+  border-radius:999px;padding:7px 20px;font-size:14px;color:#bfe3dd;
+  opacity:0;animation:fadeUp .5s ease both;}
+@keyframes fadeUp{to{opacity:1;transform:none}from{opacity:0;transform:translateY(10px)}}
+
+/* ══ S2 ARCHITECTURE ══ */
+.arch{display:flex;flex-direction:column;gap:32px;align-items:center;z-index:2;width:1760px;}
+.arch-row{display:flex;align-items:center;gap:0;justify-content:center;}
+.node{width:190px;padding:16px 12px;border-radius:14px;text-align:center;
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);
+  transition:all .5s;flex-shrink:0;}
+.node.lit{background:rgba(42,157,143,.15);border-color:var(--teal);
+  box-shadow:0 0 28px rgba(42,157,143,.35);}
+.node.blocked{background:rgba(231,111,81,.15);border-color:var(--coral);}
+.n-icon{font-size:30px;margin-bottom:6px;}
+.n-title{font-size:12.5px;font-weight:700;color:#fff;}
+.n-sub{font-size:10.5px;color:#9fc5c0;margin-top:3px;line-height:1.4;}
+.n-badge{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;
+  margin-top:7px;display:none;}
+.b-ok{background:rgba(42,157,143,.3);color:#7fd7c9;}
+.b-ko{background:rgba(231,111,81,.3);color:#f4a896;}
+.arrow{width:56px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.arrow svg{width:52px;height:18px;}
+.arr-line{stroke:rgba(255,255,255,.15);stroke-width:2;stroke-dasharray:5 4;
+  animation:flowDash 1.2s linear infinite;}
+.arr-line.on{stroke:var(--teal);}
+.arr-head{fill:rgba(255,255,255,.15);}
+.arr-head.on{fill:var(--teal);}
+@keyframes flowDash{to{stroke-dashoffset:-18}}
+
+/* ══ S3 DEMO ══ */
+.demo{display:flex;gap:44px;align-items:flex-start;z-index:2;width:1760px;}
+.phone{width:300px;background:#fff;border-radius:30px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);flex-shrink:0;}
+.ph-bar{background:var(--deep);color:#fff;padding:11px 15px;
+  display:flex;align-items:center;gap:9px;}
+.ph-av{width:32px;height:32px;border-radius:50%;background:var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ph-nm{font-weight:700;font-size:13px;}
+.ph-sb{font-size:10px;color:#bfe3dd;}
+.chat{background:#f0f2f5;padding:12px;min-height:360px;
+  display:flex;flex-direction:column;gap:8px;}
+.bub{max-width:83%;padding:9px 12px;border-radius:15px;font-size:12px;
+  line-height:1.55;animation:bPop .3s ease;}
+.bub.u{background:#fff;border-radius:15px 15px 15px 3px;align-self:flex-start;
+  color:#222;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.bub.b{background:var(--green);border-radius:15px 15px 3px 15px;
+  align-self:flex-end;color:#fff;}
+.bub.br{background:#fff8e0;border-left:3px solid var(--sand);border-radius:10px;
+  align-self:flex-start;color:#333;font-size:11px;}
+.bub.er{background:var(--coral);border-radius:15px 15px 3px 15px;
+  align-self:flex-end;color:#fff;}
+.typ{align-self:flex-end;display:flex;gap:4px;
+  padding:7px 11px;background:rgba(6,199,85,.15);border-radius:12px;}
+.d{width:6px;height:6px;background:var(--green);border-radius:50%;
+  animation:db 1s infinite;}
+.d:nth-child(2){animation-delay:.2s;}.d:nth-child(3){animation-delay:.4s;}
+@keyframes bPop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes db{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.ph-in{background:#fff;padding:8px 12px;display:flex;gap:7px;align-items:center;
+  border-top:1px solid #e8e8e8;}
+.ph-in input{flex:1;border:1px solid #ddd;border-radius:16px;padding:6px 11px;
+  font-size:11px;font-family:inherit;}
+.ph-in .snd{width:30px;height:30px;border-radius:50%;background:var(--green);
+  border:none;color:#fff;font-size:13px;}
+
+/* Tech panel */
+.tech{flex:1;display:flex;flex-direction:column;gap:12px;}
+.code{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);
+  border-radius:11px;padding:15px 17px;font-size:12.5px;font-family:Consolas,monospace;
+  color:#e2e8f0;line-height:1.75;opacity:0;transition:opacity .5s;}
+.ck{color:var(--sand);}.cv{color:#7fd7c9;}.cc{color:#64748b;}.cw{color:#fff;}.cr{color:#f4a896;}
+.steps{display:flex;flex-direction:column;gap:7px;}
+.st{display:flex;align-items:center;gap:10px;padding:9px 13px;
+  background:rgba(255,255,255,.04);border-radius:9px;
+  opacity:.25;transform:translateX(18px);transition:all .45s;}
+.st.on{opacity:1;transform:none;background:rgba(42,157,143,.08);}
+.st.dn{opacity:.55;transform:none;}
+.st-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0;}
+.st.on .st-dot{background:var(--teal);box-shadow:0 0 9px var(--teal);}
+.st.dn .st-dot{background:#475569;}
+.st-txt{font-size:12.5px;color:#e2e8f0;flex:1;}
+.st-ms{font-size:11px;color:#7fb8b2;}
+
+/* ══ S4 REFUSAL ══ */
+.refuse-wrap{display:flex;gap:44px;align-items:center;z-index:2;width:1760px;}
+.warn-box{background:rgba(231,111,81,.1);border:2px solid rgba(231,111,81,.5);
+  border-radius:16px;padding:22px 26px;max-width:440px;}
+.warn-box h3{color:var(--coral);font-size:17px;font-weight:700;margin-bottom:10px;}
+.warn-box p{color:#f4c4bb;font-size:13px;line-height:1.65;}
+.refusal-timer{font-size:52px;font-weight:800;color:var(--coral);
+  text-shadow:0 0 30px rgba(231,111,81,.5);}
+
+/* ══ S5 ADMIN ══ */
+.adm{background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);width:1640px;z-index:2;}
+.adm-top{background:var(--deep);padding:11px 18px;display:flex;align-items:center;gap:8px;}
+.adm-dot{width:11px;height:11px;border-radius:50%;}
+.adm-nav{display:flex;gap:22px;margin-left:16px;font-size:12.5px;color:#9fc5c0;}
+.adm-nav .cur{color:#fff;font-weight:700;padding-bottom:2px;border-bottom:2px solid var(--teal);}
+.adm-body{padding:18px 22px;}
+.kpi-row{display:flex;gap:12px;margin-bottom:16px;}
+.kpi{flex:1;background:#f5f9fa;border-radius:10px;padding:12px 14px;text-align:center;}
+.kpi .kv{font-size:28px;font-weight:800;color:var(--deep);}
+.kpi .kl{font-size:11px;color:#6b7b86;margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{background:#f5f9fa;color:#6b7b86;padding:7px 11px;text-align:left;font-size:11px;}
+td{padding:8px 11px;border-bottom:1px solid #eef1f3;color:#1b2733;}
+.rt{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:700;color:#fff;}
+
+/* ══ S6 CLOSE ══ */
+.cl-wrap{text-align:center;z-index:2;}
+.cl-wrap h1{font-size:72px;font-weight:800;color:#fff;line-height:1.1;}
+.cl-wrap .sub{font-size:22px;color:#9fc5c0;margin-top:12px;}
+.cl-wrap .th{font-size:17px;color:#7fb8b2;margin-top:6px;}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div class="prog" id="prog"></div>
+<div class="hint">Space / click to advance · F for fullscreen</div>
+
+<!-- S1 TITLE -->
+<div class="scene active" id="s1">
+  <div class="logo">🌾 ReLoop</div>
+  <div class="t-wrap">
+    <div style="font-size:14px;color:var(--sand);font-weight:700;letter-spacing:4px;margin-bottom:16px;">TECHNICAL DEMO · BANGKOK AGRICULTURE CONFERENCE 2026</div>
+    <h1>Re<em>Loop</em></h1>
+    <div class="t-sub">Safety-first conversational AI for Thai farmers · LINE Messaging</div>
+    <div class="t-th">ระบบ AI ที่ปลอดภัยสำหรับเกษตรกรไทย ผ่าน LINE</div>
+    <div class="pills">
+      <span class="pill" style="animation-delay:.15s">📱 LINE Messaging API</span>
+      <span class="pill" style="animation-delay:.3s">🤖 Claude Sonnet 4.5 + Vision</span>
+      <span class="pill" style="animation-delay:.45s">📚 RAG · OpenAI Embeddings 1536-dim</span>
+      <span class="pill" style="animation-delay:.6s">🛡️ Hard Guardrails (application-layer)</span>
+      <span class="pill" style="animation-delay:.75s">🌤️ Proactive Daily Briefing</span>
+    </div>
+  </div>
+</div>
+
+<!-- S2 ARCHITECTURE -->
+<div class="scene" id="s2">
+  <div class="scene-tag">System Architecture · Data Flow</div>
+  <div class="logo">🌾 ReLoop</div>
+  <div class="arch">
+    <div style="font-size:14px;color:#9fc5c0;margin-bottom:-16px;">End-to-end request pipeline for every farmer message</div>
+    <div class="arch-row">
+      <div class="node" id="n1"><div class="n-icon">📱</div><div class="n-title">LINE Platform</div><div class="n-sub">POST /webhook/line<br/>X-Line-Signature<br/>HMAC-SHA256 verify</div><span class="n-badge b-ok" id="nb1">✓ Verified</span></div>
+      <div class="arrow"><svg viewBox="0 0 52 18"><line class="arr-line" id="al1" x1="0" y1="9" x2="42" y2="9"/><polygon class="arr-head" id="ah1" points="40,5 52,9 40,13"/></svg></div>
+      <div class="node" id="n2"><div class="n-icon">🔁</div><div class="n-title">Deduplication</div><div class="n-sub">message.id lookup<br/>PostgreSQL idempotency<br/>prevents duplicate replies</div><span class="n-badge b-ok" id="nb2">✓ New</span></div>
+      <div class="arrow"><svg viewBox="0 0 52 18"><line class="arr-line" id="al2" x1="0" y1="9" x2="42" y2="9"/><polygon class="arr-head" id="ah2" points="40,5 52,9 40,13"/></svg></div>
+      <div class="node" id="n3"><div class="n-icon">🛡️</div><div class="n-title">Safety Gate</div><div class="n-sub">keyword blocklist<br/>pesticide · medical<br/>legal · financial</div><span class="n-badge b-ok" id="nb3">✓ Safe</span></div>
+      <div class="arrow"><svg viewBox="0 0 52 18"><line class="arr-line" id="al3" x1="0" y1="9" x2="42" y2="9"/><polygon class="arr-head" id="ah3" points="40,5 52,9 40,13"/></svg></div>
+      <div class="node" id="n4"><div class="n-icon">🎯</div><div class="n-title">Intent Classify</div><div class="n-sub">domain / smalltalk<br/>/ help / image<br/>keyword-based, auditable</div><span class="n-badge b-ok" id="nb4">domain</span></div>
+      <div class="arrow"><svg viewBox="0 0 52 18"><line class="arr-line" id="al4" x1="0" y1="9" x2="42" y2="9"/><polygon class="arr-head" id="ah4" points="40,5 52,9 40,13"/></svg></div>
+      <div class="node" id="n5"><div class="n-icon">🔍</div><div class="n-title">RAG Retrieval</div><div class="n-sub">OpenAI text-embedding<br/>cosine similarity<br/>min_score=0.18 threshold</div><span class="n-badge b-ok" id="nb5">4 chunks · 0.41</span></div>
+      <div class="arrow"><svg viewBox="0 0 52 18"><line class="arr-line" id="al5" x1="0" y1="9" x2="42" y2="9"/><polygon class="arr-head" id="ah5" points="40,5 52,9 40,13"/></svg></div>
+      <div class="node" id="n6"><div class="n-icon">🤖</div><div class="n-title">Claude Sonnet 4.5</div><div class="n-sub">grounded generation<br/>citation mandatory<br/>context from history</div><span class="n-badge b-ok" id="nb6">✓ 340ms</span></div>
+      <div class="arrow"><svg viewBox="0 0 52 18"><line class="arr-line" id="al6" x1="0" y1="9" x2="42" y2="9"/><polygon class="arr-head" id="ah6" points="40,5 52,9 40,13"/></svg></div>
+      <div class="node" id="n7"><div class="n-icon">💬</div><div class="n-title">LINE Reply API</div><div class="n-sub">reply_token used<br/>push API for images<br/>logged to PostgreSQL</div><span class="n-badge b-ok" id="nb7">✓ Sent</span></div>
+    </div>
+    <div style="display:flex;gap:40px;margin-top:-8px;">
+      <div style="text-align:center;font-size:12px;color:#9fc5c0;padding:10px 18px;background:rgba(42,157,143,.08);border-radius:8px;border:1px solid rgba(42,157,143,.2);">
+        📊 Every message logged · route · confidence · latency · citations → PostgreSQL
+      </div>
+      <div style="text-align:center;font-size:12px;color:#9fc5c0;padding:10px 18px;background:rgba(233,198,106,.08);border-radius:8px;border:1px solid rgba(233,198,106,.2);">
+        📅 First message of day → daily briefing prepended (weather · incentives · false news alerts)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S3 LIVE CHAT + CODE -->
+<div class="scene" id="s3">
+  <div class="scene-tag">Live Demo · Domain Question Flow</div>
+  <div class="logo">🌾 ReLoop</div>
+  <div class="demo">
+    <div class="phone">
+      <div class="ph-bar"><div class="ph-av">🌾</div><div><div class="ph-nm">ReLoop</div><div class="ph-sb">Online</div></div></div>
+      <div class="chat" id="chat3"></div>
+      <div class="ph-in"><input id="inp3" value="" readonly/><div class="snd">➤</div></div>
+    </div>
+    <div class="tech">
+      <div class="code" id="cd1">
+        <span class="cc">// 1. LINE sends signed POST to /webhook/line</span><br/>
+        <span class="ck">"text"</span>: <span class="cv">"ข้าวในนาใบเหลืองครับ ทำอย่างไรดี"</span>,<br/>
+        <span class="ck">"line_user_id"</span>: <span class="cv">"U9f2d4a3..."</span>,&nbsp;
+        <span class="ck">"line_message_id"</span>: <span class="cv">"502481..."</span>
+      </div>
+      <div class="steps" id="steps3">
+        <div class="st" id="st1"><div class="st-dot"></div><div class="st-txt">🛡️ is_high_risk(text) → <span style="color:var(--teal)">False</span></div><div class="st-ms">&lt;1ms</div></div>
+        <div class="st" id="st2"><div class="st-dot"></div><div class="st-txt">🎯 classify_intent(text) → <span style="color:var(--sand)">domain</span></div><div class="st-ms">&lt;1ms</div></div>
+        <div class="st" id="st3"><div class="st-dot"></div><div class="st-txt">🔍 search(db, query, top_k=4, min_score=0.18) → <span style="color:var(--teal)">4 chunks · conf=0.41</span></div><div class="st-ms">12ms</div></div>
+        <div class="st" id="st4"><div class="st-dot"></div><div class="st-txt">🤖 AnthropicLLM.generate(text, context_chunks=[...]) → grounded Thai reply</div><div class="st-ms">328ms</div></div>
+        <div class="st" id="st5"><div class="st-dot"></div><div class="st-txt">💾 log_outbound(route=<span style="color:var(--teal)">faq_grounded</span>, confidence=0.41, citations=4)</div><div class="st-ms">2ms</div></div>
+      </div>
+      <div class="code" id="cd2">
+        <span class="cc">// Response</span>&nbsp;
+        <span class="ck">"route"</span>: <span class="cv">"faq_grounded"</span>,&nbsp;
+        <span class="ck">"confidence"</span>: <span style="color:var(--teal)">0.41</span>,<br/>
+        <span class="ck">"model"</span>: <span class="cv">"anthropic:claude-sonnet-4-5"</span>,&nbsp;
+        <span class="ck">"latency_ms"</span>: <span style="color:var(--teal)">340</span>,&nbsp;
+        <span class="ck">"citations"</span>: <span style="color:var(--teal)">4</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S4 GUARDRAIL -->
+<div class="scene" id="s4">
+  <div class="scene-tag">Guardrail · Hard Safety Gate · LLM Never Called</div>
+  <div class="logo">🌾 ReLoop</div>
+  <div class="refuse-wrap">
+    <div class="phone">
+      <div class="ph-bar"><div class="ph-av">🌾</div><div><div class="ph-nm">ReLoop</div><div class="ph-sb">Online</div></div></div>
+      <div class="chat">
+        <div class="bub u">ใช้พาราควอตปริมาณเท่าไหร่ครับ</div>
+        <div class="bub er" id="b4" style="display:none;font-size:11.5px;line-height:1.6;">
+          ขออภัยครับ คำถามนี้เกี่ยวข้องกับปริมาณสารเคมี ซึ่งต้องใช้ความระมัดระวังเป็นพิเศษ<br/><br/>
+          เพื่อความปลอดภัย ผมไม่สามารถให้คำแนะนำที่เฉพาะเจาะจงได้<br/><br/>
+          กรุณาติดต่อเจ้าหน้าที่ส่งเสริมการเกษตรโดยตรงครับ
+        </div>
+      </div>
+      <div class="ph-in"><input value="" readonly/><div class="snd">➤</div></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+      <div class="code" id="cd4" style="opacity:0;transition:opacity .5s;">
+        <span class="cc">// Safety gate — BEFORE any retrieval or LLM call</span><br/>
+        <span class="cw">if</span> <span class="ck">is_high_risk</span>(text):&nbsp;<span class="cc"># matched "พาราควอต"</span><br/>
+        &nbsp;&nbsp;<span class="cw">return</span> AgentResult(<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;reply=<span class="cr">HIGH_RISK_RESPONSE_TH</span>,&nbsp;<span class="cc"># fixed template</span><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;route=<span class="cv">"refused"</span>, intent=<span class="cv">"high_risk"</span><br/>
+        &nbsp;&nbsp;)&nbsp;<span class="cc"># LLM tokens used: 0 · time: &lt;5ms</span>
+      </div>
+      <div class="steps">
+        <div class="st" id="g1"><div class="st-dot"></div><div class="st-txt">Keyword scan: "พาราควอต" ∈ HIGH_RISK_KEYWORDS → match</div><div class="st-ms">&lt;1ms</div></div>
+        <div class="st" id="g2" style="background:rgba(231,111,81,.08)!important"><div class="st-dot" style="background:var(--coral);box-shadow:0 0 9px var(--coral)"></div><div class="st-txt" style="color:#f4a896;"><b>LLM call SKIPPED</b> — fixed Thai refusal template returned immediately</div><div class="st-ms">&lt;5ms total</div></div>
+        <div class="st" id="g3"><div class="st-dot"></div><div class="st-txt">log_outbound(route="refused", intent="high_risk") → admin visible</div><div class="st-ms">1ms</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;" id="gm">
+        <div style="background:rgba(231,111,81,.12);border:1px solid rgba(231,111,81,.3);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:32px;font-weight:800;color:var(--coral);">0</div>
+          <div style="font-size:11px;color:#f4a896;margin-top:3px;">LLM tokens used</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:32px;font-weight:800;color:#fff;">&lt;5ms</div>
+          <div style="font-size:11px;color:#9fc5c0;margin-top:3px;">Total latency</div>
+        </div>
+        <div style="background:rgba(231,111,81,.12);border:1px solid rgba(231,111,81,.3);border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:32px;font-weight:800;color:var(--coral);">100%</div>
+          <div style="font-size:11px;color:#f4a896;margin-top:3px;">Refusal rate (high-risk)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S5 ADMIN -->
+<div class="scene" id="s5">
+  <div class="scene-tag">Admin Portal · Stats + Conversation Review</div>
+  <div class="logo">🌾 ReLoop</div>
+  <div style="display:flex;justify-content:center;width:100%;z-index:2;">
+    <div class="adm">
+      <div class="adm-top">
+        <div class="adm-dot" style="background:#e76f51;"></div>
+        <div class="adm-dot" style="background:var(--sand);"></div>
+        <div class="adm-dot" style="background:var(--teal);"></div>
+        <div class="adm-nav">
+          <span>Conversations</span><span>FAQ (25)</span><span>⚖️ Compare LLMs</span>
+          <span class="cur">📊 Stats</span><span>Logout</span>
+        </div>
+      </div>
+      <div class="adm-body">
+        <div class="kpi-row">
+          <div class="kpi"><div class="kv" id="kv1" style="color:var(--teal);">0</div><div class="kl">Sessions</div></div>
+          <div class="kpi"><div class="kv" id="kv2">0</div><div class="kl">Questions today</div></div>
+          <div class="kpi"><div class="kv" id="kv3" style="color:var(--teal);">0%</div><div class="kl">Grounding rate</div></div>
+          <div class="kpi"><div class="kv" id="kv4" style="color:var(--coral);">0%</div><div class="kl">Refusal rate</div></div>
+          <div class="kpi"><div class="kv" id="kv5">0ms</div><div class="kl">Avg latency</div></div>
+          <div class="kpi"><div class="kv" id="kv6" style="color:var(--teal);">0</div><div class="kl">FAQ entries</div></div>
+        </div>
+        <table>
+          <tr><th>Session</th><th>Farmer ID</th><th>Question</th><th>Route</th><th>Conf.</th><th>Latency</th><th>Time</th></tr>
+          <tr><td>a1b2c3</td><td>U9f2d4a…</td><td>ข้าวในนาใบเหลืองครับ ทำอย่างไรดี</td><td><span class="rt" style="background:var(--teal);">faq_grounded</span></td><td>0.41</td><td>340ms</td><td>09:14</td></tr>
+          <tr><td>d4e5f6</td><td>U3a7b8c…</td><td>ใช้พาราควอตปริมาณเท่าไหร่ครับ</td><td><span class="rt" style="background:var(--coral);">refused</span></td><td>—</td><td>&lt;5ms</td><td>08:52</td></tr>
+          <tr><td>g7h8i9</td><td>Uf9e2d1…</td><td>🌾 Daily briefing + ดินในนาเป็นกรดครับ</td><td><span class="rt" style="background:var(--teal);">faq_grounded</span></td><td>0.38</td><td>290ms</td><td>08:05</td></tr>
+          <tr><td>j1k2l3</td><td>U4c6a9b…</td><td>[📷 Image: rice leaf disease photo]</td><td><span class="rt" style="background:#8b5cf6;">image_analysis</span></td><td>—</td><td>2.1s</td><td>07:40</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S6 CLOSING -->
+<div class="scene" id="s6">
+  <div class="logo">🌾 ReLoop</div>
+  <div class="cl-wrap">
+    <div style="font-size:14px;color:var(--sand);font-weight:700;letter-spacing:4px;margin-bottom:16px;">LIVE · thai-farmer-agent.onrender.com</div>
+    <h1>ReLoop — Thai Farmer AI</h1>
+    <div class="sub">Safe · Grounded · Cited · Proactive · PDPA-aligned</div>
+    <div class="th">ปลอดภัย · อ้างอิงได้ · มีที่มา · เชิงรุก · สอดคล้อง PDPA</div>
+    <div class="pills" style="margin-top:26px;">
+      <span class="pill" style="animation-delay:.1s">Dr. Toungporn Uttarotai</span>
+      <span class="pill" style="animation-delay:.2s">Dr. Daranrat Jaitiang</span>
+      <span class="pill" style="animation-delay:.3s">Faculty of Agriculture · Chiang Mai University</span>
+    </div>
+    <div class="pills">
+      <span class="pill" style="animation-delay:.4s">LINE @643txfqa</span>
+      <span class="pill" style="animation-delay:.5s">FastAPI · PostgreSQL · Render Singapore</span>
+      <span class="pill" style="animation-delay:.6s">github.com/AshyBoy91/eye-line-app</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Particles */
+const CV=document.getElementById('canvas');CV.width=1920;CV.height=1080;
+const cx=CV.getContext('2d');
+const ps=Array.from({length:70},()=>({x:Math.random()*1920,y:Math.random()*1080,
+  vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*2+.8}));
+function drawP(){
+  cx.clearRect(0,0,1920,1080);
+  ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>1920)p.vx*=-1;if(p.y<0||p.y>1080)p.vy*=-1;
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle='rgba(42,157,143,.55)';cx.fill();});
+  ps.forEach((a,i)=>ps.slice(i+1).forEach(b=>{
+    const d=Math.hypot(a.x-b.x,a.y-b.y);
+    if(d<130){cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);
+    cx.strokeStyle=`rgba(42,157,143,${.35*(1-d/130)})`;cx.lineWidth=.7;cx.stroke();}}));
+  requestAnimationFrame(drawP);}
+drawP();
+
+/* Scene system */
+const SC=['s1','s2','s3','s4','s5','s6'];
+const DU=[6000,10000,12000,10000,10000,8000];
+const TOT=DU.reduce((a,b)=>a+b,0);
+let cur=0,t0=0,rf=null,tm=null;
+
+function lit(n){
+  const nd=document.getElementById('n'+n);
+  const al=document.getElementById('al'+n);
+  const ah=document.getElementById('ah'+n);
+  const nb=document.getElementById('nb'+n);
+  if(nd)nd.classList.add('lit');
+  if(al)al.classList.add('on');
+  if(ah)ah.classList.add('on');
+  if(nb)nb.style.display='inline-block';
+}
+
+function type(el,txt,spd,cb){
+  let i=0;el.value='';
+  function s(){if(i<txt.length){el.value+=txt[i++];setTimeout(s,spd);}else if(cb)cb();}s();}
+
+function addB(chat,cls,html,d){
+  setTimeout(()=>{
+    const b=document.createElement('div');b.className='bub '+cls;b.innerHTML=html;
+    chat.appendChild(b);chat.scrollTop=chat.scrollHeight;},d);}
+
+function addTyp(chat,d,dur){
+  let el;
+  setTimeout(()=>{el=document.createElement('div');el.className='typ';
+    el.innerHTML='<div class="d"></div><div class="d"></div><div class="d"></div>';
+    chat.appendChild(el);chat.scrollTop=chat.scrollHeight;},d);
+  setTimeout(()=>{if(el&&el.parentNode)el.parentNode.removeChild(el);},d+dur);}
+
+function onScene(id){
+  if(id==='s2'){for(let i=1;i<=7;i++)setTimeout(()=>lit(i),300+i*1000);}
+  if(id==='s3'){
+    const ch=document.getElementById('chat3');
+    const ip=document.getElementById('inp3');
+    addB(ch,'br','🌾 <b>ข้อมูลประจำวัน</b> · 17/07/2026<br/>🌤️ เชียงใหม่ 33°C ความชื้น 72%<br/>📢 ประกันรายได้ชาวนา 10,000 บาท/ตัน',500);
+    setTimeout(()=>type(ip,'ข้าวในนาใบเหลืองครับ ทำอย่างไรดี',55,()=>{
+      addB(ch,'u','ข้าวในนาใบเหลืองครับ ทำอย่างไรดี',200);
+      ip.value='';
+      setTimeout(()=>document.getElementById('cd1').style.opacity='1',500);
+      const st=['st1','st2','st3','st4','st5'];
+      st.forEach((s,i)=>{
+        setTimeout(()=>{document.getElementById(s).classList.add('on');
+          if(i>0)document.getElementById(st[i-1]).classList.replace('on','dn');},700+i*650);});
+      addTyp(ch,1000,3000);
+      addB(ch,'b','ใบข้าวเหลืองมีสาเหตุหลัก 3 ประการ:<br/><br/>(1) <b>ขาดไนโตรเจน</b> → ปุ๋ยยูเรีย 3–5 กก./ไร่<br/>(2) <b>น้ำท่วมขัง</b> → ระบายน้ำทันที<br/>(3) <b>ดินเปรี้ยว</b> → ปูนขาว 100–200 กก./ไร่<br/><br/>📎 แหล่งข้อมูล: กรมการข้าว',4200);
+      setTimeout(()=>document.getElementById('cd2').style.opacity='1',4900);
+    }),1300);}
+  if(id==='s4'){
+    setTimeout(()=>document.getElementById('cd4').style.opacity='1',400);
+    ['g1','g2','g3'].forEach((g,i)=>setTimeout(()=>{
+      document.getElementById(g).classList.add('on');
+      if(i>0)document.getElementById(['g1','g2','g3'][i-1]).classList.replace('on','dn');},700+i*900));
+    setTimeout(()=>document.getElementById('b4').style.display='block',3000);}
+  if(id==='s5'){
+    function cTo(id,t,sfx,ms){
+      let v=0,s=Math.ceil(t/28);const el=document.getElementById(id);
+      const iv=setInterval(()=>{v=Math.min(v+s,t);el.textContent=v+sfx;if(v>=t)clearInterval(iv);},ms/28);}
+    setTimeout(()=>{cTo('kv1',24,'',500);cTo('kv2',156,'',500);cTo('kv6',25,'',400);
+      setTimeout(()=>{document.getElementById('kv3').textContent='83%';},600);
+      setTimeout(()=>{document.getElementById('kv4').textContent='9%';},800);
+      setTimeout(()=>{document.getElementById('kv5').textContent='340ms';},1000);},300);}
+}
+
+function show(n){
+  document.getElementById(SC[cur]).classList.remove('active');
+  cur=((n%SC.length)+SC.length)%SC.length;
+  document.getElementById(SC[cur]).classList.add('active');
+  onScene(SC[cur]);
+  clearTimeout(tm);cancelAnimationFrame(rf);
+  t0=performance.now();
+  function tick(){
+    const e=performance.now()-t0;
+    const done=DU.slice(0,cur).reduce((a,b)=>a+b,0);
+    document.getElementById('prog').style.width=((done+e)/TOT*100)+'%';
+    if(e<DU[cur])rf=requestAnimationFrame(tick);}
+  rf=requestAnimationFrame(tick);
+  tm=setTimeout(()=>show(cur+1),DU[cur]);}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();show(cur+1);}
+  else if(e.key==='ArrowLeft')show(cur-1);
+  else if(e.key.toLowerCase()==='f')document.documentElement.requestFullscreen?.();});
+document.addEventListener('click',()=>show(cur+1));
+onScene('s1');
+setTimeout(()=>show(1),DU[0]);
+</script>
+</body>
+</html>
