@@ -375,14 +375,14 @@ DEPT_HTML = """<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"/>
     <div class="person">
       <div class="avatar">A</div>
       <h3>Dr. Toungporn (Uttarotai)</h3>
-        <div class="title-th">ดร.ตวงพร (อุตรโรตไทย)</div>
+        <div class="title-th">ดร.ตวงพร (อุตตโรทัย)</div>
         <div class="role">
           PhD in Microbiology / Highland Agriculture<br/>
           Dept of Highland Agriculture &amp; Natural Resources<br/>
           Research: AI applications in plant disease identification
         </div>
         <div class="focus">Focus: Knowledge base design · Image analysis · Field validation</div>
-      <div class="title-th">ดร.ตวงพร (อุตรโรตไทย)</div>
+      <div class="title-th">ดร.ตวงพร (อุตตโรทัย)</div>
       <div class="role">
         PhD in Agricultural Science<br/>
         Specialisation: Crop Protection &amp; Plant Pathology<br/>
